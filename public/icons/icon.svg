@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="sakugrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7BE07A" />
+      <stop offset="100%" stop-color="#1EB6E6" />
+    </linearGradient>
+  </defs>
+
+  <!-- Solid / Gradient Card Background for App Icon -->
+  <rect x="0" y="0" width="512" height="512" rx="120" ry="120" fill="#FFFFFF" />
+  <rect x="24" y="24" width="464" height="464" rx="100" ry="100" fill="none" stroke="url(#sakugrad512)" stroke-width="28" />
+
+  <!-- Stylized S with Price Tag & Growth Arrow -->
+  <g transform="translate(136, 120)">
+    <!-- Tag Head Hole -->
+    <circle cx="170" cy="55" r="16" fill="url(#sakugrad512)" />
+    
+    <!-- Path forming the Saku & Tag ribbon -->
+    <path d="M 120 40 L 160 40 C 185 40 205 60 205 85 L 205 105 C 205 125 190 142 170 145 L 80 160 C 55 164 35 185 35 210 C 35 240 60 264 90 264 L 160 264 C 190 264 215 240 215 210 L 215 170" 
+          fill="none" stroke="url(#sakugrad512)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" />
+    
+    <!-- Rising Chart Arrow through the S -->
+    <path d="M 35 160 L 85 105 L 140 145 L 205 60" 
+          fill="none" stroke="url(#sakugrad512)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Arrow Head -->
+    <polygon points="175,45 220,45 220,90" fill="#7BE07A" />
+  </g>
+</svg>
