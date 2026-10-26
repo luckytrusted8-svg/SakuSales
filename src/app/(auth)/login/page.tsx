@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserCheck, Shield, AlertCircle, Store } from 'lucide-react';
+import { UserCheck, Shield, AlertCircle, Store, Lock, KeyRound } from 'lucide-react';
 import { userRepo } from '../../../lib/repositories/userRepo';
 import { settingsRepo } from '../../../lib/repositories/settingsRepo';
 import type { UserEntity, StoreSettingsEntity } from '../../../lib/db/schema';
@@ -70,7 +70,7 @@ export default function LoginPage() {
         login(selectedUser);
         router.replace('/kasir');
       } else {
-        setErrorMsg('PIN yang Anda masukkan salah');
+        setErrorMsg('PIN yang Anda masukkan tidak sesuai');
         setPin('');
       }
     } catch (err: any) {
@@ -83,32 +83,33 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F5F8FB] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1EB6E6]" />
+      <div className="min-h-screen bg-[#F5F8FB] flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 rounded-full border-3 border-[#1EB6E6] border-t-transparent animate-spin" />
+        <p className="text-xs font-semibold text-[#6B7280]">Memuat sesi kasir...</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#F5F8FB] flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-[#E2E8F0] text-center">
-        {/* Brand Icon */}
-        <div className="w-14 h-14 rounded-2xl saku-gradient-bg flex items-center justify-center text-white mx-auto mb-3 shadow-md">
-          <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center m-0.5">
+      <div className="w-full max-w-sm saku-card p-6 sm:p-8 text-center border border-[#E2E8F0] shadow-lg">
+        {/* Brand Icon Emblem */}
+        <div className="w-14 h-14 rounded-2xl saku-gradient-bg flex items-center justify-center mx-auto mb-3 shadow-md p-0.5">
+          <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
             <span className="font-extrabold text-xl saku-gradient-text tracking-tighter">SS</span>
           </div>
         </div>
 
-        <h1 className="text-xl font-bold text-[#0F2747]">
-          {settings?.storeName || 'SakuSales'}
+        <h1 className="text-xl font-extrabold text-[#0F2747]">
+          {settings?.storeName || 'SakuSales POS'}
         </h1>
-        <p className="text-xs text-[#6B7280] mb-5">
-          Pilih akun dan masukkan PIN untuk mulai berjualan
+        <p className="text-xs text-[#6B7280] mb-5 mt-0.5">
+          Pilih akun kasir dan masukkan PIN keamanan
         </p>
 
-        {/* User Switcher */}
+        {/* User Switcher (Multi-user support) */}
         {users.length > 1 && (
-          <div className="flex gap-2 mb-4 p-1 bg-[#F5F8FB] rounded-xl border border-[#E2E8F0]">
+          <div className="flex gap-2 mb-4 p-1 bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0]">
             {users.map((u) => {
               const isSelected = selectedUser?.id === u.id;
               return (
@@ -120,9 +121,9 @@ export default function LoginPage() {
                     setPin('');
                     setErrorMsg('');
                   }}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                     isSelected
-                      ? 'bg-white text-[#0F2747] shadow-xs'
+                      ? 'bg-white text-[#0F2747] shadow-xs border border-[#E2E8F0]'
                       : 'text-slate-500 hover:text-[#0F2747]'
                   }`}
                 >
@@ -134,16 +135,16 @@ export default function LoginPage() {
         )}
 
         {/* Current User Pill */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F5F8FB] border border-[#E2E8F0] rounded-full text-xs font-semibold text-[#0F2747] mb-4">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-full text-xs font-semibold text-[#0F2747] mb-5 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
-          <span>Masuk sebagai: {selectedUser?.name}</span>
-          <span className="text-[10px] text-[#1EB6E6] uppercase bg-cyan-50 px-1 rounded font-bold">
+          <span>Akun: <strong>{selectedUser?.name}</strong></span>
+          <span className="text-[10px] text-[#1EB6E6] uppercase bg-cyan-50 px-1.5 py-0.5 rounded-md font-bold">
             {selectedUser?.role}
           </span>
         </div>
 
         {/* PIN Dots */}
-        <div className="flex justify-center gap-3 mb-4">
+        <div className="flex justify-center gap-3 mb-5">
           {[0, 1, 2, 3, 4, 5].map((idx) => {
             const hasDigit = pin.length > idx;
             return (
@@ -151,8 +152,8 @@ export default function LoginPage() {
                 key={idx}
                 className={`w-4 h-4 rounded-full border-2 transition-all ${
                   hasDigit
-                    ? 'saku-gradient-bg border-transparent scale-110'
-                    : 'border-slate-300 bg-slate-50'
+                    ? 'saku-gradient-bg border-transparent scale-110 shadow-xs'
+                    : 'border-slate-300 bg-slate-100'
                 }`}
               />
             );
@@ -160,8 +161,8 @@ export default function LoginPage() {
         </div>
 
         {errorMsg && (
-          <div className="flex items-center justify-center gap-1.5 text-xs text-[#EF4444] font-semibold mb-4 bg-red-50 py-1.5 px-3 rounded-lg">
-            <AlertCircle className="w-3.5 h-3.5" />
+          <div className="flex items-center justify-center gap-1.5 text-xs text-[#EF4444] font-semibold mb-4 bg-red-50 py-2 px-3 rounded-xl border border-red-200">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
@@ -180,9 +181,9 @@ export default function LoginPage() {
             type="button"
             onClick={() => verifyAndLogin(pin)}
             disabled={isVerifying}
-            className="pos-btn w-full saku-gradient-bg text-white text-sm font-bold shadow-md hover:opacity-95 mt-5"
+            className="pos-btn saku-btn-primary w-full text-white text-sm font-bold mt-5"
           >
-            {isVerifying ? 'Memverifikasi...' : 'Masuk ke Kasir'}
+            {isVerifying ? 'Memverifikasi...' : 'Buka Kasir'}
           </button>
         )}
       </div>
