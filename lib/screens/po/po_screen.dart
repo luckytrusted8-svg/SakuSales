@@ -222,6 +222,200 @@ class _PoScreenState extends State<PoScreen> {
     );
   }
 
+  void _showEditPoDialog(PoSession po) {
+    final titleController = TextEditingController(text: po.title);
+    final slugController = TextEditingController(text: po.slug);
+    DateTime? selectedDate = po.closesAt;
+    TimeOfDay? selectedTime = po.closesAt != null
+        ? TimeOfDay(hour: po.closesAt!.hour, minute: po.closesAt!.minute)
+        : null;
+    bool isOpen = po.open;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            title: const Text('Edit Sesi Pre Order'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Judul Sesi PO',
+                      hintText: 'Contoh: PO Batch 2 Akhir Pekan',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: slugController,
+                    decoration: const InputDecoration(
+                      labelText: 'Kode Link Web (Slug)',
+                      hintText: 'Contoh: po_batch2',
+                      helperText: 'Huruf kecil, angka, atau garis bawah',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.event_outlined, size: 18),
+                    label: Text(
+                      selectedDate == null
+                          ? 'Atur Batas Waktu Tutup (Opsional)'
+                          : 'Tutup: ${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year} ${selectedTime != null ? "${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}" : ""}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    onPressed: () async {
+                      final pickedDate = await showDatePicker(
+                        context: ctx,
+                        initialDate: selectedDate ?? DateTime.now().add(const Duration(days: 1)),
+                        firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                        lastDate: DateTime.now().add(const Duration(days: 90)),
+                      );
+                      if (pickedDate != null && ctx.mounted) {
+                        final pickedTime = await showTimePicker(
+                          context: ctx,
+                          initialTime: selectedTime ?? const TimeOfDay(hour: 20, minute: 0),
+                        );
+                        setDialogState(() {
+                          selectedDate = pickedDate;
+                          selectedTime = pickedTime;
+                        });
+                      }
+                    },
+                  ),
+                  if (selectedDate != null)
+                    TextButton(
+                      onPressed: () {
+                        setDialogState(() {
+                          selectedDate = null;
+                          selectedTime = null;
+                        });
+                      },
+                      child: const Text('Hapus Batas Waktu', style: TextStyle(fontSize: 12, color: AppColors.pink)),
+                    ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Status PO Buka', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    value: isOpen,
+                    activeThumbColor: AppColors.olive,
+                    onChanged: (val) {
+                      setDialogState(() {
+                        isOpen = val;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(minimumSize: const Size(100, 44)),
+                onPressed: () async {
+                  final title = titleController.text.trim();
+                  final slug = slugController.text.trim();
+
+                  if (title.isEmpty || slug.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Judul dan kode link wajib diisi.')),
+                    );
+                    return;
+                  }
+
+                  DateTime? closesAt;
+                  if (selectedDate != null) {
+                    closesAt = DateTime(
+                      selectedDate!.year,
+                      selectedDate!.month,
+                      selectedDate!.day,
+                      selectedTime?.hour ?? 23,
+                      selectedTime?.minute ?? 59,
+                    );
+                  }
+
+                  try {
+                    await SupabaseService.instance.updatePoSession(
+                      id: po.id,
+                      title: title,
+                      slug: slug,
+                      open: isOpen,
+                      closesAt: closesAt,
+                    );
+                    if (ctx.mounted) Navigator.pop(ctx);
+                    _loadPoList();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Sesi PO berhasil diperbarui.')),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Gagal memperbarui PO: ${e.toString()}')),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Simpan'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _confirmDeletePo(PoSession po) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Sesi PO?'),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus sesi PO "${po.title}"?\n\n'
+          'Seluruh pesanan di dalam sesi ini juga akan terhapus secara permanen.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.pink,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await SupabaseService.instance.deletePoSession(po.id);
+                _loadPoList();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Sesi PO "${po.title}" berhasil dihapus.')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Gagal menghapus PO: ${e.toString()}')),
+                  );
+                }
+              }
+            },
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -286,7 +480,7 @@ class _PoScreenState extends State<PoScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Expanded(
                                     child: Column(
@@ -298,7 +492,7 @@ class _PoScreenState extends State<PoScreen> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'Link: /po/${po.slug}',
+                                          'Kode: ${po.slug}',
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: AppColors.olive,
@@ -308,7 +502,34 @@ class _PoScreenState extends State<PoScreen> {
                                       ],
                                     ),
                                   ),
-                                  // Switch Buka / Tutup PO
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined, size: 20),
+                                    tooltip: 'Edit Sesi PO',
+                                    visualDensity: VisualDensity.compact,
+                                    onPressed: () => _showEditPoDialog(po),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.pink),
+                                    tooltip: 'Hapus Sesi PO',
+                                    visualDensity: VisualDensity.compact,
+                                    onPressed: () => _confirmDeletePo(po),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  if (po.closesAt != null)
+                                    Text(
+                                      'Batas: ${po.closesAt!.day}/${po.closesAt!.month}/${po.closesAt!.year} ${po.closesAt!.hour.toString().padLeft(2, '0')}:${po.closesAt!.minute.toString().padLeft(2, '0')}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Theme.of(context).textTheme.bodySmall?.color,
+                                      ),
+                                    )
+                                  else
+                                    const Text('Tanpa batas waktu', style: TextStyle(fontSize: 11)),
                                   Row(
                                     children: [
                                       Text(
@@ -328,17 +549,6 @@ class _PoScreenState extends State<PoScreen> {
                                   ),
                                 ],
                               ),
-
-                              if (po.closesAt != null) ...[
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Batas waktu: ${po.closesAt!.day}/${po.closesAt!.month}/${po.closesAt!.year} ${po.closesAt!.hour.toString().padLeft(2, '0')}:${po.closesAt!.minute.toString().padLeft(2, '0')}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Theme.of(context).textTheme.bodySmall?.color,
-                                  ),
-                                ),
-                              ],
 
                               const Divider(height: 20),
 

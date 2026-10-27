@@ -198,6 +198,21 @@ class SupabaseService {
     await client.from('po_sessions').update({'open': open}).eq('id', id);
   }
 
+  Future<void> updatePoSession({
+    required String id,
+    required String title,
+    required String slug,
+    required bool open,
+    DateTime? closesAt,
+  }) async {
+    await client.from('po_sessions').update({
+      'title': title.trim(),
+      'slug': slug.trim(),
+      'open': open,
+      'closes_at': closesAt?.toIso8601String(),
+    }).eq('id', id);
+  }
+
   Future<void> deletePoSession(String id) async {
     await client.from('po_sessions').delete().eq('id', id);
   }

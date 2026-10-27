@@ -15,11 +15,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    OrdersScreen(),
-    PoScreen(),
-    CatalogScreen(),
-    SettingsScreen(),
+  void _switchToTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  late final List<Widget> _screens = [
+    OrdersScreen(onSwitchToPo: () => _switchToTab(1)),
+    const PoScreen(),
+    const CatalogScreen(),
+    const SettingsScreen(),
   ];
 
   @override

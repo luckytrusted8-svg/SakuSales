@@ -4,10 +4,12 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../models/order.dart';
 import '../../models/po_session.dart';
+import '../po/po_screen.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
-  const OrdersScreen({super.key});
+  final VoidCallback? onSwitchToPo;
+  const OrdersScreen({super.key, this.onSwitchToPo});
 
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
@@ -188,7 +190,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
                             icon: const Icon(Icons.share_outlined, size: 18),
                             label: const Text('Buka Menu Pre Order'),
                             onPressed: () {
-                              DefaultTabController.of(context).animateTo(1);
+                              if (widget.onSwitchToPo != null) {
+                                widget.onSwitchToPo!();
+                              } else {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (_) => const PoScreen()),
+                                );
+                              }
                             },
                           ),
                         ],
