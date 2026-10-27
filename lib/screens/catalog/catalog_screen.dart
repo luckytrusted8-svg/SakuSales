@@ -77,33 +77,98 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
   // ================= 1. PRODUK & UKURAN =================
   void _showAddOrEditProduct([Product? p]) {
     final nameCtrl = TextEditingController(text: p?.name ?? '');
-    showDialog(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1E2028) : Colors.white;
+    final handleColor = isDark ? const Color(0xFF43495B) : const Color(0xFFD0D5DD);
+
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(p == null ? 'Tambah Produk' : 'Ubah Nama Produk'),
-        content: TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(hintText: 'Contoh: Keju Aroma'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 44)),
-            onPressed: () async {
-              final name = nameCtrl.text.trim();
-              if (name.isEmpty) return;
-              if (p == null) {
-                await SupabaseService.instance.createProduct(name);
-              } else {
-                await SupabaseService.instance.updateProduct(p.id, name, p.active);
-              }
-              if (ctx.mounted) Navigator.pop(ctx);
-              _loadAll();
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: sheetBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: handleColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        p == null ? 'Tambah Produk' : 'Ubah Nama Produk',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 22),
+                        tooltip: 'Batal',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameCtrl,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Produk',
+                      hintText: 'Contoh: Keju Aroma',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final name = nameCtrl.text.trim();
+                      if (name.isEmpty) return;
+                      if (p == null) {
+                        await SupabaseService.instance.createProduct(name);
+                      } else {
+                        await SupabaseService.instance.updateProduct(p.id, name, p.active);
+                      }
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      _loadAll();
+                    },
+                    child: const Text(
+                      'Simpan',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -113,83 +178,136 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     final priceCtrl = TextEditingController(text: (s?.price ?? 11000).toString());
     final incGlazeCtrl = TextEditingController(text: (s?.includedGlaze ?? 1).toString());
     final extraGlazeCtrl = TextEditingController(text: (s?.extraGlazePrice ?? 2000).toString());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1E2028) : Colors.white;
+    final handleColor = isDark ? const Color(0xFF43495B) : const Color(0xFFD0D5DD);
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(s == null ? 'Tambah Ukuran' : 'Ubah Ukuran'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Nama Ukuran (contoh: Isi 8 + 1 glaze)'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: piecesCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Jumlah Isi (pcs)'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: priceCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Harga Dasar (Rupiah)'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: incGlazeCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Glaze Termasuk di Harga'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: extraGlazeCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Biaya Tambahan per Glaze'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 44)),
-            onPressed: () async {
-              final name = nameCtrl.text.trim();
-              final pieces = int.tryParse(piecesCtrl.text) ?? 1;
-              final price = int.tryParse(priceCtrl.text) ?? 0;
-              final incGlaze = int.tryParse(incGlazeCtrl.text) ?? 1;
-              final extraGlaze = int.tryParse(extraGlazeCtrl.text) ?? 2000;
-
-              if (name.isEmpty) return;
-
-              final item = SizeItem(
-                id: s?.id ?? '',
-                productId: productId,
-                name: name,
-                pieces: pieces,
-                price: price,
-                includedGlaze: incGlaze,
-                extraGlazePrice: extraGlaze,
-                active: s?.active ?? true,
-              );
-
-              if (s == null) {
-                await SupabaseService.instance.createSize(item);
-              } else {
-                await SupabaseService.instance.updateSize(item);
-              }
-
-              if (ctx.mounted) Navigator.pop(ctx);
-              _loadAll();
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: sheetBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: handleColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        s == null ? 'Tambah Ukuran' : 'Ubah Ukuran',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 22),
+                        tooltip: 'Batal',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(labelText: 'Nama Ukuran (contoh: Isi 8 + 1 glaze)'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: piecesCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Jumlah Isi (pcs)'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: priceCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Harga Dasar (Rupiah)'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: incGlazeCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Glaze Termasuk di Harga'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: extraGlazeCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Biaya Tambahan per Glaze (Rupiah)'),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final name = nameCtrl.text.trim();
+                      final pieces = int.tryParse(piecesCtrl.text) ?? 1;
+                      final price = int.tryParse(priceCtrl.text) ?? 0;
+                      final incGlaze = int.tryParse(incGlazeCtrl.text) ?? 1;
+                      final extraGlaze = int.tryParse(extraGlazeCtrl.text) ?? 2000;
+
+                      if (name.isEmpty) return;
+
+                      final item = SizeItem(
+                        id: s?.id ?? '',
+                        productId: productId,
+                        name: name,
+                        pieces: pieces,
+                        price: price,
+                        includedGlaze: incGlaze,
+                        extraGlazePrice: extraGlaze,
+                        active: s?.active ?? true,
+                      );
+
+                      if (s == null) {
+                        await SupabaseService.instance.createSize(item);
+                      } else {
+                        await SupabaseService.instance.updateSize(item);
+                      }
+
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      _loadAll();
+                    },
+                    child: const Text(
+                      'Simpan',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -197,47 +315,109 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
   void _showAddOrEditGlaze([Glaze? g]) {
     final nameCtrl = TextEditingController(text: g?.name ?? '');
     final hppCtrl = TextEditingController(text: (g?.hpp ?? 0).toString());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1E2028) : Colors.white;
+    final handleColor = isDark ? const Color(0xFF43495B) : const Color(0xFFD0D5DD);
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(g == null ? 'Tambah Pilihan Glaze' : 'Ubah Glaze'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Nama Glaze (contoh: Greentea, Coklat)'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: hppCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'HPP Bahan per Glaze (Rupiah)'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 44)),
-            onPressed: () async {
-              final name = nameCtrl.text.trim();
-              final hpp = int.tryParse(hppCtrl.text) ?? 0;
-              if (name.isEmpty) return;
-
-              if (g == null) {
-                await SupabaseService.instance.createGlaze(name, hpp);
-              } else {
-                await SupabaseService.instance.updateGlaze(g.id, name, hpp, g.active);
-              }
-              if (ctx.mounted) Navigator.pop(ctx);
-              _loadAll();
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: sheetBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: handleColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        g == null ? 'Tambah Pilihan Glaze' : 'Ubah Glaze',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 22),
+                        tooltip: 'Batal',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameCtrl,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Glaze (contoh: Greentea, Coklat)',
+                      hintText: 'Contoh: Greentea',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: hppCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'HPP Bahan per Glaze (Rupiah)',
+                      hintText: '0',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final name = nameCtrl.text.trim();
+                      final hpp = int.tryParse(hppCtrl.text) ?? 0;
+                      if (name.isEmpty) return;
+
+                      if (g == null) {
+                        await SupabaseService.instance.createGlaze(name, hpp);
+                      } else {
+                        await SupabaseService.instance.updateGlaze(g.id, name, hpp, g.active);
+                      }
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      _loadAll();
+                    },
+                    child: const Text(
+                      'Simpan',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -246,54 +426,119 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     final nameCtrl = TextEditingController(text: t?.name ?? '');
     final extraCtrl = TextEditingController(text: (t?.extraPrice ?? 2000).toString());
     final hppCtrl = TextEditingController(text: (t?.hpp ?? 0).toString());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1E2028) : Colors.white;
+    final handleColor = isDark ? const Color(0xFF43495B) : const Color(0xFFD0D5DD);
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t == null ? 'Tambah Topping' : 'Ubah Topping'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Nama Topping (contoh: Oreo, Keju)'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: extraCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Harga Tambahan Jual (Rupiah)'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: hppCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'HPP Bahan Topping (Rupiah)'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 44)),
-            onPressed: () async {
-              final name = nameCtrl.text.trim();
-              final extra = int.tryParse(extraCtrl.text) ?? 2000;
-              final hpp = int.tryParse(hppCtrl.text) ?? 0;
-              if (name.isEmpty) return;
-
-              if (t == null) {
-                await SupabaseService.instance.createTopping(name, extra, hpp);
-              } else {
-                await SupabaseService.instance.updateTopping(t.id, name, extra, hpp, t.active);
-              }
-              if (ctx.mounted) Navigator.pop(ctx);
-              _loadAll();
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: sheetBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: handleColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        t == null ? 'Tambah Topping' : 'Ubah Topping',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 22),
+                        tooltip: 'Batal',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameCtrl,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Topping (contoh: Oreo, Keju)',
+                      hintText: 'Contoh: Oreo',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: extraCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Harga Tambahan Jual (Rupiah)',
+                      hintText: '2000',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: hppCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'HPP Bahan Topping (Rupiah)',
+                      hintText: '0',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final name = nameCtrl.text.trim();
+                      final extra = int.tryParse(extraCtrl.text) ?? 2000;
+                      final hpp = int.tryParse(hppCtrl.text) ?? 0;
+                      if (name.isEmpty) return;
+
+                      if (t == null) {
+                        await SupabaseService.instance.createTopping(name, extra, hpp);
+                      } else {
+                        await SupabaseService.instance.updateTopping(t.id, name, extra, hpp, t.active);
+                      }
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      _loadAll();
+                    },
+                    child: const Text(
+                      'Simpan',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -302,53 +547,118 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     final nameCtrl = TextEditingController(text: ing?.name ?? '');
     final unitCtrl = TextEditingController(text: ing?.unit ?? 'gram');
     final costCtrl = TextEditingController(text: (ing?.costPerUnit ?? 0).toString());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1E2028) : Colors.white;
+    final handleColor = isDark ? const Color(0xFF43495B) : const Color(0xFFD0D5DD);
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(ing == null ? 'Tambah Bahan Baku' : 'Ubah Bahan Baku'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Nama Bahan (contoh: Kulit Lumpia, Keju Cheddar)'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: unitCtrl,
-              decoration: const InputDecoration(labelText: 'Satuan (gram, ml, pcs)'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: costCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Harga per Satuan (Rupiah)'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 44)),
-            onPressed: () async {
-              final name = nameCtrl.text.trim();
-              final unit = unitCtrl.text.trim();
-              final cost = double.tryParse(costCtrl.text) ?? 0.0;
-              if (name.isEmpty || unit.isEmpty) return;
-
-              if (ing == null) {
-                await SupabaseService.instance.createIngredient(name, unit, cost);
-              } else {
-                await SupabaseService.instance.updateIngredient(ing.id, name, unit, cost);
-              }
-              if (ctx.mounted) Navigator.pop(ctx);
-              _loadAll();
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: sheetBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: handleColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        ing == null ? 'Tambah Bahan Baku' : 'Ubah Bahan Baku',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 22),
+                        tooltip: 'Batal',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameCtrl,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Bahan',
+                      hintText: 'Contoh: Kulit Lumpia, Keju Cheddar',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: unitCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Satuan (gram, ml, pcs)',
+                      hintText: 'Contoh: gram, ml, pcs',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: costCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Harga per Satuan (Rupiah)',
+                      hintText: '0.0',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final name = nameCtrl.text.trim();
+                      final unit = unitCtrl.text.trim();
+                      final cost = double.tryParse(costCtrl.text) ?? 0.0;
+                      if (name.isEmpty || unit.isEmpty) return;
+
+                      if (ing == null) {
+                        await SupabaseService.instance.createIngredient(name, unit, cost);
+                      } else {
+                        await SupabaseService.instance.updateIngredient(ing.id, name, unit, cost);
+                      }
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      _loadAll();
+                    },
+                    child: const Text(
+                      'Simpan',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
