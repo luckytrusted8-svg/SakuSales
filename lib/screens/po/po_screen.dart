@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/constants/app_config.dart';
 import '../../core/services/supabase_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/po_session.dart';
@@ -213,10 +214,10 @@ class _PoScreenState extends State<PoScreen> {
   }
 
   void _sharePoLink(PoSession po) {
-    final link = 'https://sakusales.id/po/${po.slug}';
+    final link = '${AppConfig.webBaseUrl}/?slug=${po.slug}';
     Clipboard.setData(ClipboardData(text: link));
     Share.share(
-      'Halo! Pre Order "${po.title}" sudah dibuka. Pesan cemilan sekarang di: $link',
+      'Halo! Pre Order "${po.title}" sudah dibuka. Pesan sekarang di: $link',
       subject: 'Link Pre Order SakuSales',
     );
   }
