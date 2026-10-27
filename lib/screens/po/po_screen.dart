@@ -5,6 +5,7 @@ import '../../core/constants/app_config.dart';
 import '../../core/services/supabase_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/po_session.dart';
+import 'create_po_screen.dart';
 import 'po_recap_screen.dart';
 
 class PoScreen extends StatefulWidget {
@@ -67,150 +68,13 @@ class _PoScreenState extends State<PoScreen> {
     }
   }
 
-  void _showCreatePoDialog() {
-    final titleController = TextEditingController();
-    final slugController = TextEditingController();
-    bool openImmediate = true;
-    DateTime? selectedDate;
-    TimeOfDay? selectedTime;
-
-    void updateSlug(String text) {
-      final slug = text
-          .toLowerCase()
-          .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
-          .replaceAll(RegExp(r'\s+'), '_');
-      slugController.text = slug;
-    }
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          return AlertDialog(
-            title: const Text('Buat Sesi PO Baru'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text('Judul PO', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                  const SizedBox(height: 4),
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(hintText: 'Contoh: PO Batch 1 Sabtu'),
-                    onChanged: updateSlug,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text('Kode Link / Slug', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                  const SizedBox(height: 4),
-                  TextField(
-                    controller: slugController,
-                    decoration: const InputDecoration(hintText: 'contoh: po_batch_1_sabtu'),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text('Batas Waktu Tutup (Opsional)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                  const SizedBox(height: 6),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.calendar_today_outlined, size: 16),
-                    label: Text(
-                      selectedDate == null
-                          ? 'Pilih Batas Waktu'
-                          : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year} ${selectedTime != null ? "${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}" : ""}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    onPressed: () async {
-                      final pickedDate = await showDatePicker(
-                        context: ctx,
-                        initialDate: DateTime.now().add(const Duration(days: 1)),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(const Duration(days: 90)),
-                      );
-                      if (pickedDate != null && ctx.mounted) {
-                        final pickedTime = await showTimePicker(
-                          context: ctx,
-                          initialTime: const TimeOfDay(hour: 20, minute: 0),
-                        );
-                        setDialogState(() {
-                          selectedDate = pickedDate;
-                          selectedTime = pickedTime;
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Buka PO Sekarang', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                    value: openImmediate,
-                    // ignore: deprecated_member_use
-                    activeColor: AppColors.olive,
-                    onChanged: (val) {
-                      setDialogState(() {
-                        openImmediate = val;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Batal'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(minimumSize: const Size(100, 44)),
-                onPressed: () async {
-                  final title = titleController.text.trim();
-                  final slug = slugController.text.trim();
-
-                  if (title.isEmpty || slug.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Judul dan kode link wajib diisi.')),
-                    );
-                    return;
-                  }
-
-                  DateTime? closesAt;
-                  if (selectedDate != null) {
-                    closesAt = DateTime(
-                      selectedDate!.year,
-                      selectedDate!.month,
-                      selectedDate!.day,
-                      selectedTime?.hour ?? 23,
-                      selectedTime?.minute ?? 59,
-                    );
-                  }
-
-                  try {
-                    await SupabaseService.instance.createPoSession(
-                      title: title,
-                      slug: slug,
-                      open: openImmediate,
-                      closesAt: closesAt,
-                    );
-                    if (ctx.mounted) Navigator.pop(ctx);
-                    _loadPoList();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Sesi PO berhasil dibuat.')),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Gagal membuat PO: ${e.toString()}')),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Simpan'),
-              ),
-            ],
-          );
-        },
-      ),
+  Future<void> _showCreatePoDialog() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const CreatePoScreen()),
     );
+    if (result == true) {
+      _loadPoList();
+    }
   }
 
   void _sharePoLink(PoSession po) {
@@ -222,154 +86,13 @@ class _PoScreenState extends State<PoScreen> {
     );
   }
 
-  void _showEditPoDialog(PoSession po) {
-    final titleController = TextEditingController(text: po.title);
-    final slugController = TextEditingController(text: po.slug);
-    DateTime? selectedDate = po.closesAt;
-    TimeOfDay? selectedTime = po.closesAt != null
-        ? TimeOfDay(hour: po.closesAt!.hour, minute: po.closesAt!.minute)
-        : null;
-    bool isOpen = po.open;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          return AlertDialog(
-            title: const Text('Edit Sesi Pre Order'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Judul Sesi PO',
-                      hintText: 'Contoh: PO Batch 2 Akhir Pekan',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: slugController,
-                    decoration: const InputDecoration(
-                      labelText: 'Kode Link Web (Slug)',
-                      hintText: 'Contoh: po_batch2',
-                      helperText: 'Huruf kecil, angka, atau garis bawah',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.event_outlined, size: 18),
-                    label: Text(
-                      selectedDate == null
-                          ? 'Atur Batas Waktu Tutup (Opsional)'
-                          : 'Tutup: ${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year} ${selectedTime != null ? "${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}" : ""}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    onPressed: () async {
-                      final pickedDate = await showDatePicker(
-                        context: ctx,
-                        initialDate: selectedDate ?? DateTime.now().add(const Duration(days: 1)),
-                        firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                        lastDate: DateTime.now().add(const Duration(days: 90)),
-                      );
-                      if (pickedDate != null && ctx.mounted) {
-                        final pickedTime = await showTimePicker(
-                          context: ctx,
-                          initialTime: selectedTime ?? const TimeOfDay(hour: 20, minute: 0),
-                        );
-                        setDialogState(() {
-                          selectedDate = pickedDate;
-                          selectedTime = pickedTime;
-                        });
-                      }
-                    },
-                  ),
-                  if (selectedDate != null)
-                    TextButton(
-                      onPressed: () {
-                        setDialogState(() {
-                          selectedDate = null;
-                          selectedTime = null;
-                        });
-                      },
-                      child: const Text('Hapus Batas Waktu', style: TextStyle(fontSize: 12, color: AppColors.pink)),
-                    ),
-                  const SizedBox(height: 8),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Status PO Buka', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                    value: isOpen,
-                    activeThumbColor: AppColors.olive,
-                    onChanged: (val) {
-                      setDialogState(() {
-                        isOpen = val;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Batal'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(minimumSize: const Size(100, 44)),
-                onPressed: () async {
-                  final title = titleController.text.trim();
-                  final slug = slugController.text.trim();
-
-                  if (title.isEmpty || slug.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Judul dan kode link wajib diisi.')),
-                    );
-                    return;
-                  }
-
-                  DateTime? closesAt;
-                  if (selectedDate != null) {
-                    closesAt = DateTime(
-                      selectedDate!.year,
-                      selectedDate!.month,
-                      selectedDate!.day,
-                      selectedTime?.hour ?? 23,
-                      selectedTime?.minute ?? 59,
-                    );
-                  }
-
-                  try {
-                    await SupabaseService.instance.updatePoSession(
-                      id: po.id,
-                      title: title,
-                      slug: slug,
-                      open: isOpen,
-                      closesAt: closesAt,
-                    );
-                    if (ctx.mounted) Navigator.pop(ctx);
-                    _loadPoList();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Sesi PO berhasil diperbarui.')),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Gagal memperbarui PO: ${e.toString()}')),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Simpan'),
-              ),
-            ],
-          );
-        },
-      ),
+  Future<void> _showEditPoDialog(PoSession po) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => CreatePoScreen(poToEdit: po)),
     );
+    if (result == true) {
+      _loadPoList();
+    }
   }
 
   void _confirmDeletePo(PoSession po) {

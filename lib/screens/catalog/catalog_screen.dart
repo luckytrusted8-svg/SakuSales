@@ -31,6 +31,9 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _loadAll();
   }
 
@@ -349,23 +352,179 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     );
   }
 
+  Widget? _buildFab() {
+    if (_isLoading) return null;
+
+    final index = _tabController.index;
+    VoidCallback? onPressed;
+    String tooltip = '';
+
+    if (index == 0 && _products.isNotEmpty) {
+      onPressed = () => _showAddOrEditProduct();
+      tooltip = 'Tambah Produk';
+    } else if (index == 1 && _glazes.isNotEmpty) {
+      onPressed = () => _showAddOrEditGlaze();
+      tooltip = 'Tambah Glaze';
+    } else if (index == 2 && _toppings.isNotEmpty) {
+      onPressed = () => _showAddOrEditTopping();
+      tooltip = 'Tambah Topping';
+    } else if (index == 3 && _ingredients.isNotEmpty) {
+      onPressed = () => _showAddOrEditIngredient();
+      tooltip = 'Tambah Bahan Baku';
+    }
+
+    if (onPressed == null) return null;
+
+    return FloatingActionButton(
+      heroTag: 'catalog_fab_$index',
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      elevation: 4,
+      shape: const CircleBorder(),
+      onPressed: onPressed,
+      tooltip: tooltip,
+      child: const Icon(Icons.add, size: 28),
+    );
+  }
+
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String description,
+    required String buttonLabel,
+    required VoidCallback onButtonPressed,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, size: 36, color: AppColors.primary),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.65),
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: Text(
+                        buttonLabel,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                      ),
+                      onPressed: onButtonPressed,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Katalog & Resep HPP'),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          indicatorColor: AppColors.olive,
-          labelColor: AppColors.olive,
-          unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
-          tabs: const [
-            Tab(text: 'Produk & Ukuran'),
-            Tab(text: 'Glaze / Rasa'),
-            Tab(text: 'Topping'),
-            Tab(text: 'Bahan Baku'),
-          ],
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(54),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: Container(
+              height: 44,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E2028),
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: false,
+                dividerColor: Colors.transparent,
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicator: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                labelColor: Colors.white,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                ),
+                unselectedLabelColor: Colors.white.withValues(alpha: 0.55),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                ),
+                tabs: const [
+                  Tab(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Produk & Ukuran'),
+                    ),
+                  ),
+                  Tab(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Glaze / Rasa'),
+                    ),
+                  ),
+                  Tab(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Topping'),
+                    ),
+                  ),
+                  Tab(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Bahan Baku'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
       body: _isLoading
@@ -379,6 +538,8 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
                 _buildIngredientsTab(),
               ],
             ),
+      floatingActionButton: _buildFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -386,161 +547,154 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
   Widget _buildProductsTab() {
     return RefreshIndicator(
       onRefresh: _loadAll,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Tambah Produk Baru'),
-              onPressed: () => _showAddOrEditProduct(),
-            ),
-            const SizedBox(height: 16),
+      child: _products.isEmpty
+          ? _buildEmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: 'Belum Ada Produk',
+              description: 'Tambahkan produk utama seperti Keju Aroma beserta variasi ukurannya.',
+              buttonLabel: 'Tambah Produk Baru',
+              onButtonPressed: () => _showAddOrEditProduct(),
+            )
+          : SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ..._products.map((p) {
+                    final prodSizes = _sizes.where((s) => s.productId == p.id).toList();
 
-            if (_products.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Text('Belum ada produk. Klik tombol di atas untuk menambah.'),
-                ),
-              )
-            else
-              ..._products.map((p) {
-                final prodSizes = _sizes.where((s) => s.productId == p.id).toList();
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              p.name,
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Switch(
-                                  value: p.active,
-                                  activeThumbColor: AppColors.olive,
-                                  onChanged: (val) async {
-                                    await SupabaseService.instance.updateProduct(p.id, p.name, val);
-                                    _loadAll();
-                                  },
+                                Text(
+                                  p.name,
+                                  style: Theme.of(context).textTheme.titleLarge,
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.edit_outlined, size: 18),
-                                  onPressed: () => _showAddOrEditProduct(p),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.pink),
-                                  onPressed: () async {
-                                    await SupabaseService.instance.deleteProduct(p.id);
-                                    _loadAll();
-                                  },
+                                Row(
+                                  children: [
+                                    Switch(
+                                      value: p.active,
+                                      activeThumbColor: AppColors.olive,
+                                      onChanged: (val) async {
+                                        await SupabaseService.instance.updateProduct(p.id, p.name, val);
+                                        _loadAll();
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.edit_outlined, size: 18),
+                                      onPressed: () => _showAddOrEditProduct(p),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.pink),
+                                      onPressed: () async {
+                                        await SupabaseService.instance.deleteProduct(p.id);
+                                        _loadAll();
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
+                            const Divider(height: 16),
+
+                            // Sizes list
+                            Text(
+                              'Pilihan Ukuran:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).textTheme.bodySmall?.color,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+
+                            if (prodSizes.isEmpty)
+                              const Text('Belum ada ukuran pada produk ini.', style: TextStyle(fontSize: 12))
+                            else
+                              ...prodSizes.map((s) {
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).scaffoldBackgroundColor,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${s.name} (${s.pieces} pcs)',
+                                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                            ),
+                                            Text(
+                                              '${CurrencyFormatter.format(s.price)} · Termasuk ${s.includedGlaze} glaze (ekstra ${CurrencyFormatter.format(s.extraGlazePrice)})',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Theme.of(context).textTheme.bodySmall?.color,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      // Shortcut ke Resep HPP
+                                      TextButton.icon(
+                                        icon: const Icon(Icons.menu_book_outlined, size: 16),
+                                        label: const Text('Resep HPP', style: TextStyle(fontSize: 11)),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => RecipesScreen(sizeItem: s, productName: p.name),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.edit_outlined, size: 16),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () => _showAddOrEditSize(p.id, s),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.pink),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () async {
+                                          await SupabaseService.instance.deleteSize(s.id);
+                                          _loadAll();
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('Tambah Ukuran untuk Produk Ini', style: TextStyle(fontSize: 12)),
+                              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(36)),
+                              onPressed: () => _showAddOrEditSize(p.id),
+                            ),
                           ],
                         ),
-                        const Divider(height: 16),
-
-                        // Sizes list
-                        Text(
-                          'Pilihan Ukuran:',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(context).textTheme.bodySmall?.color,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-
-                        if (prodSizes.isEmpty)
-                          const Text('Belum ada ukuran pada produk ini.', style: TextStyle(fontSize: 12))
-                        else
-                          ...prodSizes.map((s) {
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).scaffoldBackgroundColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${s.name} (${s.pieces} pcs)',
-                                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                                        ),
-                                        Text(
-                                          '${CurrencyFormatter.format(s.price)} · Termasuk ${s.includedGlaze} glaze (ekstra ${CurrencyFormatter.format(s.extraGlazePrice)})',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Theme.of(context).textTheme.bodySmall?.color,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Shortcut ke Resep HPP
-                                  TextButton.icon(
-                                    icon: const Icon(Icons.menu_book_outlined, size: 16),
-                                    label: const Text('Resep HPP', style: TextStyle(fontSize: 11)),
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => RecipesScreen(sizeItem: s, productName: p.name),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit_outlined, size: 16),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    onPressed: () => _showAddOrEditSize(p.id, s),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.pink),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    onPressed: () async {
-                                      await SupabaseService.instance.deleteSize(s.id);
-                                      _loadAll();
-                                    },
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-
-                        const SizedBox(height: 8),
-                        OutlinedButton.icon(
-                          icon: const Icon(Icons.add, size: 16),
-                          label: const Text('Tambah Ukuran untuk Produk Ini', style: TextStyle(fontSize: 12)),
-                          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(36)),
-                          onPressed: () => _showAddOrEditSize(p.id),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-          ],
-        ),
-      ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
     );
   }
 
@@ -548,69 +702,53 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
   Widget _buildGlazesTab() {
     return RefreshIndicator(
       onRefresh: _loadAll,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Tambah Pilihan Glaze / Rasa'),
-              onPressed: () => _showAddOrEditGlaze(),
-            ),
-            const SizedBox(height: 16),
-
-            if (_glazes.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Text('Belum ada glaze. Tambahkan Greentea, Tiramisu, Coklat, Taro, dll.'),
-                ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _glazes.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, idx) {
-                  final g = _glazes[idx];
-                  return Card(
-                    child: ListTile(
-                      title: Text(g.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text('HPP Biaya: ${CurrencyFormatter.format(g.hpp)} / glaze'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Switch(
-                            value: g.active,
-                            activeThumbColor: AppColors.olive,
-                            onChanged: (val) async {
-                              await SupabaseService.instance.updateGlaze(g.id, g.name, g.hpp, val);
-                              _loadAll();
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            onPressed: () => _showAddOrEditGlaze(g),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.pink),
-                            onPressed: () async {
-                              await SupabaseService.instance.deleteGlaze(g.id);
-                              _loadAll();
-                            },
-                          ),
-                        ],
-                      ),
+      child: _glazes.isEmpty
+          ? _buildEmptyState(
+              icon: Icons.palette_outlined,
+              title: 'Belum Ada Glaze / Rasa',
+              description: 'Tambahkan varian seperti Greentea, Tiramisu, Coklat, Taro, dll.',
+              buttonLabel: 'Tambah Glaze / Rasa Baru',
+              onButtonPressed: () => _showAddOrEditGlaze(),
+            )
+          : ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+              itemCount: _glazes.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, idx) {
+                final g = _glazes[idx];
+                return Card(
+                  child: ListTile(
+                    title: Text(g.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    subtitle: Text('HPP Biaya: ${CurrencyFormatter.format(g.hpp)} / glaze'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Switch(
+                          value: g.active,
+                          activeThumbColor: AppColors.olive,
+                          onChanged: (val) async {
+                            await SupabaseService.instance.updateGlaze(g.id, g.name, g.hpp, val);
+                            _loadAll();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          onPressed: () => _showAddOrEditGlaze(g),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.pink),
+                          onPressed: () async {
+                            await SupabaseService.instance.deleteGlaze(g.id);
+                            _loadAll();
+                          },
+                        ),
+                      ],
                     ),
-                  );
-                },
-              ),
-          ],
-        ),
-      ),
+                  ),
+                );
+              },
+            ),
     );
   }
 
@@ -618,71 +756,55 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
   Widget _buildToppingsTab() {
     return RefreshIndicator(
       onRefresh: _loadAll,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Tambah Pilihan Topping'),
-              onPressed: () => _showAddOrEditTopping(),
-            ),
-            const SizedBox(height: 16),
-
-            if (_toppings.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Text('Belum ada topping. Tambahkan Oreo, Keju, Sprinkle, dll.'),
-                ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _toppings.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, idx) {
-                  final t = _toppings[idx];
-                  return Card(
-                    child: ListTile(
-                      title: Text(t.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text(
-                        'Harga Tambah: +${CurrencyFormatter.format(t.extraPrice)} · HPP: ${CurrencyFormatter.format(t.hpp)}',
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Switch(
-                            value: t.active,
-                            activeThumbColor: AppColors.olive,
-                            onChanged: (val) async {
-                              await SupabaseService.instance.updateTopping(t.id, t.name, t.extraPrice, t.hpp, val);
-                              _loadAll();
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            onPressed: () => _showAddOrEditTopping(t),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.pink),
-                            onPressed: () async {
-                              await SupabaseService.instance.deleteTopping(t.id);
-                              _loadAll();
-                            },
-                          ),
-                        ],
-                      ),
+      child: _toppings.isEmpty
+          ? _buildEmptyState(
+              icon: Icons.cookie_outlined,
+              title: 'Belum Ada Topping',
+              description: 'Tambahkan topping tambahan seperti Oreo, Keju, Sprinkle, dll.',
+              buttonLabel: 'Tambah Topping Baru',
+              onButtonPressed: () => _showAddOrEditTopping(),
+            )
+          : ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+              itemCount: _toppings.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, idx) {
+                final t = _toppings[idx];
+                return Card(
+                  child: ListTile(
+                    title: Text(t.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    subtitle: Text(
+                      'Harga Tambah: +${CurrencyFormatter.format(t.extraPrice)} · HPP: ${CurrencyFormatter.format(t.hpp)}',
                     ),
-                  );
-                },
-              ),
-          ],
-        ),
-      ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Switch(
+                          value: t.active,
+                          activeThumbColor: AppColors.olive,
+                          onChanged: (val) async {
+                            await SupabaseService.instance.updateTopping(t.id, t.name, t.extraPrice, t.hpp, val);
+                            _loadAll();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          onPressed: () => _showAddOrEditTopping(t),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.pink),
+                          onPressed: () async {
+                            await SupabaseService.instance.deleteTopping(t.id);
+                            _loadAll();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 
@@ -690,63 +812,47 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
   Widget _buildIngredientsTab() {
     return RefreshIndicator(
       onRefresh: _loadAll,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Tambah Bahan Baku Baru'),
-              onPressed: () => _showAddOrEditIngredient(),
-            ),
-            const SizedBox(height: 16),
-
-            if (_ingredients.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Text('Belum ada bahan baku. Tambahkan Kulit Lumpia, Keju, Minyak, dll.'),
-                ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _ingredients.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, idx) {
-                  final ing = _ingredients[idx];
-                  return Card(
-                    child: ListTile(
-                      title: Text(ing.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text(
-                        'Satuan: ${ing.unit} · Biaya: ${CurrencyFormatter.format(ing.costPerUnit.round())} / ${ing.unit}',
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            onPressed: () => _showAddOrEditIngredient(ing),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.pink),
-                            onPressed: () async {
-                              await SupabaseService.instance.deleteIngredient(ing.id);
-                              _loadAll();
-                            },
-                          ),
-                        ],
-                      ),
+      child: _ingredients.isEmpty
+          ? _buildEmptyState(
+              icon: Icons.egg_outlined,
+              title: 'Belum Ada Bahan Baku',
+              description: 'Belum ada bahan baku. Tambahkan Kulit Lumpia, Keju, Minyak, dll.',
+              buttonLabel: 'Tambah Bahan Baku Baru',
+              onButtonPressed: () => _showAddOrEditIngredient(),
+            )
+          : ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+              itemCount: _ingredients.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, idx) {
+                final ing = _ingredients[idx];
+                return Card(
+                  child: ListTile(
+                    title: Text(ing.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    subtitle: Text(
+                      'Satuan: ${ing.unit} · Biaya: ${CurrencyFormatter.format(ing.costPerUnit.round())} / ${ing.unit}',
                     ),
-                  );
-                },
-              ),
-          ],
-        ),
-      ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          onPressed: () => _showAddOrEditIngredient(ing),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.pink),
+                          onPressed: () async {
+                            await SupabaseService.instance.deleteIngredient(ing.id);
+                            _loadAll();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
