@@ -156,26 +156,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ================= 1. KARTU PROFIL PENJUAL =================
+            // ================= BAGIAN 1: AKUN PENJUAL =================
+            _buildGroupLabel('AKUN PENJUAL'),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: cardBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cardBorder, width: 1.5),
+                border: Border.all(color: cardBorder, width: 1.0),
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.18),
                     child: const Icon(
-                      Icons.storefront_rounded,
-                      size: 28,
+                      Icons.person_rounded,
+                      size: 30,
                       color: AppColors.primary,
                     ),
                   ),
@@ -193,12 +190,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         Row(
                           children: [
                             Container(
-                              width: 7,
-                              height: 7,
+                              width: 8,
+                              height: 8,
                               decoration: const BoxDecoration(
                                 color: AppColors.success,
                                 shape: BoxShape.circle,
@@ -208,7 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Text(
                               'Akun Terhubung',
                               style: GoogleFonts.nunito(
-                                fontSize: 11,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.success,
                               ),
@@ -232,16 +229,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // ================= GRUP 1: TOKO & KONTAK =================
-            _buildGroupLabel('TOKO & KONTAK'),
+            // ================= GRUP 1: TOKO =================
+            _buildGroupLabel('GRUP 1 · TOKO'),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: cardBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cardBorder, width: 1.5),
+                border: Border.all(color: cardBorder, width: 1.0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -270,7 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _waCtrl,
                     keyboardType: TextInputType.phone,
@@ -298,7 +295,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Nomor ini akan digunakan oleh pelanggan untuk konfirmasi pesanan dan kirim bukti transfer secara otomatis.',
+                    'Nomor ini digunakan pelanggan untuk konfirmasi pesanan dan kirim bukti transfer.',
                     style: GoogleFonts.nunito(
                       fontSize: 11,
                       color: textMuted,
@@ -333,29 +330,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // ================= GRUP 2: NOTIFIKASI PESANAN =================
-            _buildGroupLabel('NOTIFIKASI PESANAN'),
+            // ================= GRUP 2: NOTIFIKASI =================
+            _buildGroupLabel('GRUP 2 · NOTIFIKASI'),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: cardBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cardBorder, width: 1.5),
+                border: Border.all(color: cardBorder, width: 1.0),
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: AppColors.accent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
                       Icons.notifications_active_rounded,
-                      size: 20,
+                      size: 22,
                       color: AppColors.accent,
                     ),
                   ),
@@ -365,7 +362,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Suara Pesanan Baru',
+                          'Uji Suara Notifikasi',
                           style: GoogleFonts.nunito(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -373,7 +370,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'correct_answer.wav (Android)',
+                          'File: correct_answer.wav',
                           style: GoogleFonts.nunito(
                             fontSize: 11,
                             color: textMuted,
@@ -402,7 +399,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                    icon: const Icon(Icons.volume_up_rounded, size: 18),
                     label: Text(
                       'Uji Suara',
                       style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 12),
@@ -412,15 +409,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // ================= GRUP 3: SISTEM & INTEGRASI (SUB-MENU) =================
-            _buildGroupLabel('SISTEM & INTEGRASI'),
+            // ================= GRUP 3: SISTEM =================
+            _buildGroupLabel('GRUP 3 · SISTEM'),
             Container(
               decoration: BoxDecoration(
                 color: cardBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cardBorder, width: 1.5),
+                border: Border.all(color: cardBorder, width: 1.0),
               ),
               child: Theme(
                 data: Theme.of(context).copyWith(
@@ -430,20 +427,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   leading: Container(
-                    width: 40,
-                    height: 40,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF252936) : const Color(0xFFEDF2F7),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
-                      Icons.terminal_rounded,
-                      size: 20,
+                      Icons.code_rounded,
+                      size: 22,
                       color: textMuted,
                     ),
                   ),
                   title: Text(
-                    'Pengaturan Lanjutan (Developer)',
+                    'Pengaturan Lanjutan / Developer',
                     style: GoogleFonts.nunito(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
@@ -458,11 +455,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   children: [
                     Divider(height: 20, color: cardBorder),
-                    Text(
-                      'Supabase URL',
-                      style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w800),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Supabase URL',
+                        style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w800),
+                      ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     TextField(
                       controller: _urlCtrl,
                       style: GoogleFonts.nunito(fontSize: 12),
@@ -493,7 +493,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     TextField(
                       controller: _keyCtrl,
                       obscureText: _hideApiKey,
@@ -505,11 +505,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'OneSignal App ID',
-                      style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w800),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'OneSignal App ID',
+                        style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w800),
+                      ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     TextField(
                       controller: _oneSignalCtrl,
                       style: GoogleFonts.nunito(fontSize: 12),
@@ -541,7 +544,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 32),
 
-            // ================= 4. TOMBOL KELUAR DARI AKUN (DESTRUCTIVE) =================
+            // ================= TOMBOL KELUAR DARI AKUN (DESTRUCTIVE) =================
             OutlinedButton.icon(
               icon: const Icon(Icons.logout_rounded, size: 18, color: AppColors.danger),
               label: Text(
@@ -553,9 +556,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                backgroundColor: AppColors.danger.withValues(alpha: 0.06),
+                backgroundColor: AppColors.danger.withValues(alpha: 0.08),
                 side: BorderSide(
-                  color: AppColors.danger.withValues(alpha: 0.35),
+                  color: AppColors.danger.withValues(alpha: 0.4),
                   width: 1.2,
                 ),
                 minimumSize: const Size.fromHeight(48),
