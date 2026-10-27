@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SakuSales - Pre Order</title>
+  <link rel="icon" type="image/svg+xml" href="../../assets/icon/icon_square.svg">
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <script>
+    // Redirect ke root dengan parameter slug jika dibuka di subdirektori po/
+    const currentPath = window.location.pathname;
+    const parts = currentPath.split("/").filter(Boolean);
+    const poIdx = parts.indexOf("po");
+    let slug = "";
+    if (poIdx !== -1 && parts[poIdx + 1] && parts[poIdx + 1] !== "index.html") {
+      slug = parts[poIdx + 1];
+    } else {
+      const urlParams = new URLSearchParams(window.location.search);
+      slug = urlParams.get("slug") || urlParams.get("po") || "";
+    }
+    if (slug) {
+      window.location.replace("../index.html?slug=" + encodeURIComponent(slug));
+    } else {
+      window.location.replace("../index.html");
+    }
+  </script>
+</body>
+</html>

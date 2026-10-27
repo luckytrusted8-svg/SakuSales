@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&amp;family=Nunito:wght@600;700&amp;display=swap');
+      .brand-title {
+        font-family: 'Fredoka', 'Nunito', sans-serif;
+        font-size: 42px;
+        font-weight: 700;
+        fill: #5C3A21;
+      }
+      .brand-tagline {
+        font-family: 'Nunito', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        fill: #6F8F2B;
+        letter-spacing: 0.5px;
+      }
+    </style>
+  </defs>
+
+  <!-- Icon Container: Olive Green rounded box -->
+  <g id="icon" transform="translate(10, 10)">
+    <rect width="100" height="100" rx="24" ry="24" fill="#6F8F2B"/>
+
+    <!-- Small cream sparkle star top-right -->
+    <path d="M 80,22 Q 80,29 87,29 Q 80,29 80,36 Q 80,29 73,29 Q 80,29 80,22 Z" fill="#FBF1D9"/>
+
+    <!-- Keju Gulung (Rolled Cheese) illustration -->
+    <g transform="translate(50, 52)">
+      <!-- Outer crispy crust circle/roll -->
+      <circle cx="0" cy="0" r="32" fill="#C98B3A"/>
+      <!-- Mid golden roll layer -->
+      <circle cx="0" cy="0" r="28" fill="#F2C46D"/>
+      <!-- Inner cream cheese filling layer -->
+      <circle cx="0" cy="0" r="22" fill="#FBF1D9"/>
+      <!-- Cheese roll spiral line -->
+      <path d="M 0,-18 A 18 18 0 1 1 -14,10 A 13 13 0 1 1 0,-6 A 7 7 0 1 1 2,4" 
+            fill="none" stroke="#5C3A21" stroke-width="4.5" stroke-linecap="round"/>
+      <!-- Cheese center molten dot -->
+      <circle cx="1" cy="2" r="3" fill="#F2C46D"/>
+    </g>
+  </g>
+
+  <!-- Wordmark & Tagline -->
+  <text x="126" y="62" class="brand-title">SakuSales</text>
+  <text x="128" y="92" class="brand-tagline">Jualan &amp; Pencatatan Cepat</text>
+</svg>

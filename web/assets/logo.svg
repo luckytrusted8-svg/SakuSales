@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- SakuSales Official Logo: Flat Neo-Tactile Vector, Zero Gradient -->
+  <!-- Vibrant Tangerine Squircle Background -->
+  <rect width="512" height="512" rx="128" fill="#FF5500"/>
+
+  <!-- Left Playful Star Sparkle -->
+  <path d="M 96 110 Q 96 132 118 132 Q 96 132 96 154 Q 96 132 74 132 Q 96 132 96 110 Z" 
+        fill="#FFE066" stroke="#18191F" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- Right Fast-Sales Star Sparkle -->
+  <path d="M 406 80 Q 406 116 442 116 Q 406 116 406 152 Q 406 116 370 116 Q 406 116 406 80 Z" 
+        fill="#FFC700" stroke="#18191F" stroke-width="12" stroke-linejoin="round"/>
+
+  <!-- Snack Sticks peeking from the Pocket -->
+  <!-- Secondary Cheese Stick (Right, Tilted) -->
+  <g transform="translate(294, 165) rotate(14)">
+    <rect x="-22" y="-55" width="44" height="110" rx="22" fill="#FFE066" stroke="#18191F" stroke-width="16"/>
+    <path d="M -12 -16 C -3 -11 3 -21 13 -16" fill="none" stroke="#18191F" stroke-width="8" stroke-linecap="round"/>
+    <path d="M -12 18 C -3 23 3 13 13 18" fill="none" stroke="#18191F" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <!-- Primary Crispy Keju Aroma Roll Stick (Left, Tilted) -->
+  <g transform="translate(216, 150) rotate(-16)">
+    <rect x="-28" y="-72" width="56" height="130" rx="26" fill="#FFC700" stroke="#18191F" stroke-width="16"/>
+    <!-- Crispy Texture Waves -->
+    <path d="M -16 -32 C -4 -27 4 -37 16 -32" fill="none" stroke="#18191F" stroke-width="10" stroke-linecap="round"/>
+    <path d="M -16 8 C -4 13 4 3 16 8" fill="none" stroke="#18191F" stroke-width="10" stroke-linecap="round"/>
+    <!-- Melted Cheese Center Dot -->
+    <circle cx="0" cy="-50" r="10" fill="#FF5500"/>
+  </g>
+
+  <!-- Pocket ("Saku") Body -->
+  <path d="M 136 210 L 136 338 C 136 410 200 442 256 442 C 312 442 376 410 376 338 L 376 210 Z" 
+        fill="#FFFFFF" stroke="#18191F" stroke-width="16" stroke-linejoin="round"/>
+
+  <!-- Pocket Top Rim / Hem -->
+  <rect x="120" y="184" width="272" height="34" rx="17" 
+        fill="#FFC700" stroke="#18191F" stroke-width="16"/>
+
+  <!-- Cheerful Pocket Smile -->
+  <path d="M 216 315 Q 256 360 296 315" fill="none" stroke="#FF5500" stroke-width="16" stroke-linecap="round"/>
+  <!-- Rosy Cheeks -->
+  <circle cx="196" cy="305" r="9" fill="#FFC700"/>
+  <circle cx="316" cy="305" r="9" fill="#FFC700"/>
+
+  <!-- Pocket Decorative Stitching -->
+  <path d="M 160 236 L 160 326 C 160 376 206 406 256 406 C 306 406 352 376 352 326 L 352 236" 
+        fill="none" stroke="#18191F" stroke-width="6" stroke-dasharray="14 10" stroke-linecap="round"/>
+</svg>

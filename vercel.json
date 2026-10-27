@@ -1,0 +1,14 @@
+{
+  "outputDirectory": "web",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/po/:slug",
+      "destination": "/index.html?slug=:slug"
+    },
+    {
+      "source": "/po/:slug/",
+      "destination": "/index.html?slug=:slug"
+    }
+  ]
+}

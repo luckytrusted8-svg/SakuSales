@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Olive Green background -->
+  <rect width="512" height="512" rx="112" ry="112" fill="#6F8F2B"/>
+
+  <g transform="translate(256, 256) scale(2.6)">
+    <!-- Small cream sparkle star top-right -->
+    <path d="M 32,-30 Q 32,-23 39,-23 Q 32,-23 32,-16 Q 32,-23 25,-23 Q 32,-23 32,-30 Z" fill="#FBF1D9"/>
+
+    <!-- Keju Gulung (Rolled Cheese) illustration -->
+    <g transform="translate(0, 2)">
+      <!-- Outer crispy crust circle/roll -->
+      <circle cx="0" cy="0" r="32" fill="#C98B3A"/>
+      <!-- Mid golden roll layer -->
+      <circle cx="0" cy="0" r="28" fill="#F2C46D"/>
+      <!-- Inner cream cheese filling layer -->
+      <circle cx="0" cy="0" r="22" fill="#FBF1D9"/>
+      <!-- Cheese roll spiral line -->
+      <path d="M 0,-18 A 18 18 0 1 1 -14,10 A 13 13 0 1 1 0,-6 A 7 7 0 1 1 2,4" 
+            fill="none" stroke="#5C3A21" stroke-width="4.5" stroke-linecap="round"/>
+      <!-- Cheese center molten dot -->
+      <circle cx="1" cy="2" r="3" fill="#F2C46D"/>
+    </g>
+  </g>
+</svg>
