@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
+import 'dashboard/dashboard_screen.dart';
 import 'orders/orders_screen.dart';
 import 'po/po_screen.dart';
 import 'catalog/catalog_screen.dart';
@@ -22,7 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   late final List<Widget> _screens = [
-    OrdersScreen(onSwitchToPo: () => _switchToTab(1)),
+    DashboardScreen(onSwitchToTab: _switchToTab),
+    OrdersScreen(onSwitchToPo: () => _switchToTab(2)),
     const PoScreen(),
     const CatalogScreen(),
     const SettingsScreen(),
@@ -42,26 +44,31 @@ class _HomeScreenState extends State<HomeScreen> {
             _currentIndex = idx;
           });
         },
-        indicatorColor: AppColors.olive.withValues(alpha: 0.18),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.18),
         destinations: const [
           NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard_rounded, color: AppColors.primary),
+            label: 'Beranda',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long, color: AppColors.olive),
+            selectedIcon: Icon(Icons.receipt_long, color: AppColors.primary),
             label: 'Pesanan',
           ),
           NavigationDestination(
             icon: Icon(Icons.calendar_today_outlined),
-            selectedIcon: Icon(Icons.calendar_today, color: AppColors.olive),
+            selectedIcon: Icon(Icons.calendar_today, color: AppColors.primary),
             label: 'Pre Order',
           ),
           NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2, color: AppColors.olive),
+            selectedIcon: Icon(Icons.inventory_2, color: AppColors.primary),
             label: 'Katalog',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings, color: AppColors.olive),
+            selectedIcon: Icon(Icons.settings, color: AppColors.primary),
             label: 'Pengaturan',
           ),
         ],
