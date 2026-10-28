@@ -118,3 +118,4 @@ $$;
 
 revoke all on function create_order(text, jsonb, jsonb) from public;
 grant execute on function create_order(text, jsonb, jsonb) to anon, authenticated;
+
