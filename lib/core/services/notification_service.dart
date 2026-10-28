@@ -27,6 +27,7 @@ class NotificationService {
         debugPrint('Notifikasi diterima saat foreground: ${event.notification.title}');
         // Bunyikan suara notifikasi saat app terbuka
         SoundService.playNewOrderSound();
+        event.notification.display();
       });
 
       // Handler saat notifikasi di-tap oleh penjual
@@ -63,7 +64,7 @@ class NotificationService {
   }
 
   // Kirim push notification ke OneSignal (untuk uji coba atau trigger manual)
-  static Future<bool> sendPushNotification({
+  static Future<Map<String, dynamic>> sendPushNotification({
     required String appId,
     required String restApiKey,
     required String title,
@@ -72,7 +73,10 @@ class NotificationService {
   }) async {
     if (appId.isEmpty || restApiKey.isEmpty) {
       debugPrint('App ID atau REST API Key OneSignal kosong.');
-      return false;
+      return {
+        'success': false,
+        'message': 'OneSignal App ID atau REST API Key masih kosong.',
+      };
     }
 
     try {
@@ -83,10 +87,10 @@ class NotificationService {
 
       final payload = jsonEncode({
         'app_id': appId.trim(),
-        'included_segments': ['Total Subscriptions'],
+        'included_segments': ['Subscribed Users'],
         'headings': {'en': title},
         'contents': {'en': body},
-        'android_channel_id': 'pesanan_baru',
+        'priority': 10,
         'data': data ?? {},
       });
 
@@ -96,10 +100,33 @@ class NotificationService {
       client.close();
 
       debugPrint('OneSignal API StatusCode: ${response.statusCode}, Body: $responseBody');
-      return response.statusCode == 200;
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Notifikasi berhasil dikirim ke OneSignal!'};
+      } else {
+        // Cek pesan error dari OneSignal
+        try {
+          final jsonMap = jsonDecode(responseBody) as Map<String, dynamic>;
+          if (jsonMap.containsKey('errors')) {
+            final errors = jsonMap['errors'];
+            final errText = errors is List ? errors.join(', ') : errors.toString();
+            if (errText.contains('All included players are not subscribed')) {
+              return {
+                'success': false,
+                'message': 'OneSignal terhubung, namun belum ada HP terdaftar. Android membutuhkan konfigurasi Google Firebase (FCM) di dashboard OneSignal.',
+              };
+            }
+            return {'success': false, 'message': 'OneSignal Error: $errText'};
+          }
+        } catch (_) {}
+        return {
+          'success': false,
+          'message': 'Gagal mengirim (Kode: ${response.statusCode}): $responseBody',
+        };
+      }
     } catch (e) {
       debugPrint('Gagal mengirim push notification via OneSignal: $e');
-      return false;
+      return {'success': false, 'message': 'Kesalahan jaringan: $e'};
     }
   }
 }

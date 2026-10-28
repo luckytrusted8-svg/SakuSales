@@ -92,7 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() => _isTestingPush = true);
     try {
-      final success = await NotificationService.sendPushNotification(
+      final res = await NotificationService.sendPushNotification(
         appId: appId,
         restApiKey: restKey,
         title: 'Uji Push Notifikasi SakuSales',
@@ -101,28 +101,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: AppColors.success,
-              duration: Duration(seconds: 4),
-              content: Text(
-                'Sinyal terkirim ke OneSignal! Segera keluar aplikasi atau kunci layar untuk melihat notifikasi muncul.',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
+        final isSuccess = res['success'] == true;
+        final message = res['message']?.toString() ?? 'Selesai';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: isSuccess ? AppColors.success : AppColors.danger,
+            duration: const Duration(seconds: 5),
+            content: Text(
+              isSuccess
+                  ? 'Sinyal terkirim ke OneSignal! Segera keluar aplikasi atau kunci layar untuk melihat notifikasi muncul.'
+                  : message,
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: AppColors.danger,
-              content: Text(
-                'Gagal mengirim notifikasi. Periksa kembali OneSignal REST API Key Anda.',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-          );
-        }
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

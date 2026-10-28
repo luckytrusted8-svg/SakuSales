@@ -908,10 +908,10 @@
       const paymentLabel = buyer.payment === "qris" ? "QRIS" : "Cash";
       const payload = {
         app_id: appId.trim(),
-        included_segments: ["Total Subscriptions"],
+        included_segments: ["Subscribed Users"],
         headings: { en: "Pesanan Baru Masuk!" },
         contents: { en: buyer.name + " : " + formatRupiah(totalAmount) + " (" + paymentLabel + ")" },
-        android_channel_id: "pesanan_baru",
+        priority: 10,
         data: { order_id: orderId }
       };
 

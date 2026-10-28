@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1014536807086",
+    "project_id": "warung-kopi-jiwa",
+    "storage_bucket": "warung-kopi-jiwa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1014536807086:android:f9638eb4b43a0718a7833f",
+        "android_client_info": {
+          "package_name": "com.sakusales.sakusales"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB68iAatR7153liuNvTjd3JFcfbnuQuB7g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
