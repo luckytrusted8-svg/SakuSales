@@ -6,7 +6,7 @@ class AppConfig {
   static const String defaultSupabaseUrl = 'https://dfdxajjtqlnjixasnymt.supabase.co';
   static const String defaultSupabaseAnonKey = 'sb_publishable_7BAoQSaRNL06n0TiK3ljJw_QQrJgY11';
   static const String defaultOneSignalAppId = '6e7d4167-3a83-49b2-88fc-1a19a7bd77e5';
-  static const String defaultOneSignalRestApiKey = '';
+  static const String defaultOneSignalRestApiKey = 'os_v2_app_nz6uczz2qne3fch4dim2pplx4vvkl5juj37eb5nykiq4og7sckdb23ce5shv74izuwcuyjqvmieod44hgjkmb7qzsaghsmbc74oouvq';
   static const String defaultSellerWa = '62895629244156';
   static const String defaultWebBaseUrl = 'https://sakusales-web.vercel.app';
   static const String notificationChannelId = 'pesanan_baru';

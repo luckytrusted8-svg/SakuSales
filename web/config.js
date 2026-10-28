@@ -6,5 +6,5 @@ window.SAKUSALES_CONFIG = {
   SUPABASE_ANON_KEY: "sb_publishable_7BAoQSaRNL06n0TiK3ljJw_QQrJgY11",
   SELLER_WA: "62895629244156",
   ONESIGNAL_APP_ID: "6e7d4167-3a83-49b2-88fc-1a19a7bd77e5",
-  ONESIGNAL_REST_API_KEY: "" // Masukkan REST API Key OneSignal agar notifikasi tembus ke HP saat aplikasi tertutup
+  ONESIGNAL_REST_API_KEY: "os_v2_app_nz6uczz2qne3fch4dim2pplx4vvkl5juj37eb5nykiq4og7sckdb23ce5shv74izuwcuyjqvmieod44hgjkmb7qzsaghsmbc74oouvq"
 };
