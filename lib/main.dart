@@ -27,8 +27,12 @@ void main() async {
     debugPrint('Supabase init warning: $e');
   }
 
-  // 3. Inisialisasi OneSignal
+  // 3. Inisialisasi OneSignal & Sinkronisasi Seller
   await NotificationService.initialize(AppConfig.oneSignalAppId);
+  final currentUser = SupabaseService.instance.currentUser;
+  if (currentUser != null) {
+    await NotificationService.registerSeller(currentUser.id);
+  }
 
   // 4. Handler navigasi saat notifikasi pesanan di-tap
   NotificationService.onOrderClick = (orderId) async {

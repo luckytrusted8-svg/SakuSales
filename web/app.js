@@ -693,6 +693,8 @@
     wa = wa.replace(/[^0-9]/g, "");
     if (wa.startsWith("0")) {
       wa = "62" + wa.slice(1);
+    } else if (wa.startsWith("8")) {
+      wa = "62" + wa;
     }
 
     if (!isPickup && !address) {
@@ -814,6 +816,35 @@
     const paymentText = orderData.buyer.payment === "qris" ? "QRIS (Transfer / E-Wallet)" : "Cash (Tunai Saat Serah Terima)";
     const deliveryText = orderData.buyer.pickup ? "Ambil Sendiri di Lokasi Penjual" : orderData.buyer.address;
 
+    let qrisHtml = "";
+    if (orderData.buyer.payment === "qris") {
+      qrisHtml =
+        '<div class="qris-payment-card">' +
+          '<div class="qris-card-header">' +
+            '<div class="qris-icon-badge">' +
+              '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+                '<rect x="3" y="3" width="7" height="7"></rect>' +
+                '<rect x="14" y="3" width="7" height="7"></rect>' +
+                '<rect x="14" y="14" width="7" height="7"></rect>' +
+                '<rect x="3" y="14" width="7" height="7"></rect>' +
+              '</svg>' +
+            '</div>' +
+            '<div>' +
+              '<h3 class="qris-title">Pembayaran QRIS / DANA</h3>' +
+              '<p class="qris-subtitle">Pindai kode QRIS di bawah ini untuk transfer</p>' +
+            '</div>' +
+          '</div>' +
+          '<div class="qris-image-wrapper">' +
+            '<img src="assets/qris.png" alt="QRIS DANA SakuSales" class="qris-image" />' +
+          '</div>' +
+          '<div class="qris-amount-row">' +
+            '<span>Total yang Harus Ditransfer:</span>' +
+            '<strong class="qris-amount-val">' + formatRupiah(totalRupiah) + '</strong>' +
+          '</div>' +
+          '<p class="qris-note">Setelah transfer berhasil, simpan tangkapan layar bukti pembayaran lalu tekan tombol kirim ke WhatsApp di bawah ini.</p>' +
+        '</div>';
+    }
+
     elSummaryContent.innerHTML =
       '<div class="summary-buyer-info">' +
         '<div><strong>Nama Pemesan:</strong> ' + orderData.buyer.name + '</div>' +
@@ -828,7 +859,8 @@
       '<div class="summary-total-bar">' +
         '<span class="summary-total-title">Total Tagihan</span>' +
         '<span class="summary-total-amount">' + formatRupiah(totalRupiah) + '</span>' +
-      '</div>';
+      '</div>' +
+      qrisHtml;
 
     // Susun pesan WhatsApp
     let waMessage =

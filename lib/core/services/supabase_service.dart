@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/product.dart';
 import '../../models/size_item.dart';
@@ -250,6 +251,12 @@ class SupabaseService {
     return (res as List).map((j) => OrderItem.fromJson(j)).toList();
   }
 
+  Future<List<OrderItem>> getOrderItemsForOrders(List<String> orderIds) async {
+    if (orderIds.isEmpty) return [];
+    final res = await client.from('order_items').select().filter('order_id', 'in', orderIds);
+    return (res as List).map((j) => OrderItem.fromJson(j)).toList();
+  }
+
   Future<void> updateOrderStatus(String orderId, OrderStatus newStatus) async {
     await client.from('orders').update({'status': newStatus.name}).eq('id', orderId);
   }
@@ -257,7 +264,7 @@ class SupabaseService {
   // Setup Realtime Sound Trigger on INSERT
   RealtimeChannel? _ordersChannel;
 
-  void subscribeToNewOrdersSound() {
+  void subscribeToNewOrdersSound({void Function(Map<String, dynamic> record)? onNewOrder}) {
     _ordersChannel?.unsubscribe();
     _ordersChannel = client
         .channel('public:orders_realtime')
@@ -266,8 +273,12 @@ class SupabaseService {
           schema: 'public',
           table: 'orders',
           callback: (payload) {
-            debugPrint('Realtime pesanan baru terdeteksi via Supabase Realtime!');
+            debugPrint('Realtime pesanan baru terdeteksi via Supabase Realtime: ${payload.newRecord}');
             SoundService.playNewOrderSound();
+            HapticFeedback.heavyImpact();
+            if (onNewOrder != null && payload.newRecord.isNotEmpty) {
+              onNewOrder(payload.newRecord);
+            }
           },
         )
         .subscribe();

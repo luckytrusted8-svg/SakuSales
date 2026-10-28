@@ -79,6 +79,178 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     }
   }
 
+  // ================= KONFIRMASI HAPUS =================
+  Future<void> _confirmDeleteProduct(Product p) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Produk?'),
+        content: Text('Apakah Anda yakin ingin menghapus produk "${p.name}"?\nSeluruh pilihan ukuran dan resep terkait akan ikut terhapus.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await SupabaseService.instance.deleteProduct(p.id);
+        _loadAll();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menghapus produk: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteSize(SizeItem s) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Ukuran Kemasan?'),
+        content: Text('Apakah Anda yakin ingin menghapus ukuran "${s.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await SupabaseService.instance.deleteSize(s.id);
+        _loadAll();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menghapus ukuran: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteGlaze(Glaze g) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Glaze / Rasa?'),
+        content: Text('Apakah Anda yakin ingin menghapus glaze "${g.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await SupabaseService.instance.deleteGlaze(g.id);
+        _loadAll();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menghapus glaze: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteTopping(Topping t) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Topping?'),
+        content: Text('Apakah Anda yakin ingin menghapus topping "${t.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await SupabaseService.instance.deleteTopping(t.id);
+        _loadAll();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menghapus topping: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteIngredient(Ingredient ing) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Bahan Baku?'),
+        content: Text('Apakah Anda yakin ingin menghapus bahan baku "${ing.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await SupabaseService.instance.deleteIngredient(ing.id);
+        _loadAll();
+      } catch (e) {
+        if (mounted) {
+          final errStr = e.toString().toLowerCase();
+          String userMsg = 'Gagal menghapus bahan: $e';
+          if (errStr.contains('foreign key') || errStr.contains('recipes') || errStr.contains('restrict')) {
+            userMsg = 'Bahan baku "${ing.name}" tidak dapat dihapus karena masih digunakan di dalam resep produk. Hapus bahan ini dari resep terlebih dahulu.';
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.danger,
+              duration: const Duration(seconds: 4),
+              content: Text(userMsg),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   // ================= 1. PRODUK & UKURAN =================
   void _showAddOrEditProduct([Product? p]) {
     final nameCtrl = TextEditingController(text: p?.name ?? '');
@@ -979,10 +1151,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
                                         tooltip: 'Hapus Produk',
-                                        onPressed: () async {
-                                          await SupabaseService.instance.deleteProduct(p.id);
-                                          _loadAll();
-                                        },
+                                        onPressed: () => _confirmDeleteProduct(p),
                                       ),
                                       const SizedBox(width: 2),
                                       Icon(
@@ -1130,10 +1299,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
                                                       padding: EdgeInsets.zero,
                                                       constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                                                       tooltip: 'Hapus Ukuran',
-                                                      onPressed: () async {
-                                                        await SupabaseService.instance.deleteSize(s.id);
-                                                        _loadAll();
-                                                      },
+                                                      onPressed: () => _confirmDeleteSize(s),
                                                     ),
                                                   ],
                                                 ),
@@ -1282,10 +1448,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                                 tooltip: 'Hapus Glaze',
-                                onPressed: () async {
-                                  await SupabaseService.instance.deleteGlaze(g.id);
-                                  _loadAll();
-                                },
+                                onPressed: () => _confirmDeleteGlaze(g),
                               ),
                             ],
                           ),
@@ -1414,10 +1577,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                                 tooltip: 'Hapus Topping',
-                                onPressed: () async {
-                                  await SupabaseService.instance.deleteTopping(t.id);
-                                  _loadAll();
-                                },
+                                onPressed: () => _confirmDeleteTopping(t),
                               ),
                             ],
                           ),
@@ -1542,10 +1702,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                                 tooltip: 'Hapus Bahan',
-                                onPressed: () async {
-                                  await SupabaseService.instance.deleteIngredient(ing.id);
-                                  _loadAll();
-                                },
+                                onPressed: () => _confirmDeleteIngredient(ing),
                               ),
                             ],
                           ),

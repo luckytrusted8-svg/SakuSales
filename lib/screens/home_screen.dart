@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../core/services/supabase_service.dart';
 import '../core/theme/app_colors.dart';
+import '../core/utils/currency_formatter.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'orders/orders_screen.dart';
 import 'po/po_screen.dart';
@@ -20,6 +23,76 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _setupOrderNotifications();
+  }
+
+  void _setupOrderNotifications() {
+    SupabaseService.instance.subscribeToNewOrdersSound(
+      onNewOrder: (record) {
+        if (!mounted) return;
+        final buyerName = record['buyer_name'] ?? 'Pelanggan';
+        final total = record['total'] ?? 0;
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 7),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            content: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pesanan Baru Masuk!',
+                        style: GoogleFonts.fredoka(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.white),
+                      ),
+                      Text(
+                        '$buyerName : ${CurrencyFormatter.format(total)}',
+                        style: GoogleFonts.nunito(fontWeight: FontWeight.w600, fontSize: 12, color: Colors.white.withValues(alpha: 0.95)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            action: SnackBarAction(
+              label: 'Buka',
+              textColor: Colors.white,
+              backgroundColor: Colors.black.withValues(alpha: 0.25),
+              onPressed: () {
+                _switchToTab(1); // Buka tab Pesanan
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    SupabaseService.instance.unsubscribeFromNewOrdersSound();
+    super.dispose();
   }
 
   late final List<Widget> _screens = [

@@ -85,12 +85,54 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  Future<void> _confirmCancelOrder() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Batalkan Pesanan?'),
+        content: Text('Apakah Anda yakin ingin membatalkan pesanan dari ${_order.buyerName}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Tidak'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.pink,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Ya, Batalkan'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      _changeStatus(OrderStatus.batal);
+    }
+  }
+
   Future<void> _chatBuyerWa() async {
     var waNum = _order.buyerWa.replaceAll(RegExp(r'[^0-9]'), '');
     if (waNum.startsWith('0')) {
       waNum = '62${waNum.substring(1)}';
+    } else if (waNum.startsWith('8')) {
+      waNum = '62$waNum';
     }
-    final uri = Uri.parse('https://wa.me/$waNum');
+
+    String message = 'Halo Kak ${_order.buyerName}, ';
+    if (_order.status == OrderStatus.menunggu_bayar || _order.status == OrderStatus.baru) {
+      message += 'pesanan PO SakuSales sudah kami terima. Total tagihan sebesar ${CurrencyFormatter.format(_order.total)} (${_order.payment.label}). Mohon konfirmasi pembayarannya ya. Terima kasih!';
+    } else if (_order.status == OrderStatus.lunas || _order.status == OrderStatus.diproses) {
+      message += 'pembayaran untuk pesanan PO SakuSales sudah kami terima & saat ini pesanan sedang diproses. Mohon ditunggu ya!';
+    } else if (_order.status == OrderStatus.selesai) {
+      message += 'pesanan PO SakuSales sudah selesai disiapkan ${_order.pickup ? "dan siap diambil" : "dan segera diantar"}. Terima kasih telah memesan!';
+    } else {
+      message += 'terkait pesanan PO SakuSales Anda.';
+    }
+
+    final uri = Uri.parse('https://wa.me/$waNum?text=${Uri.encodeComponent(message)}');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -398,7 +440,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             side: const BorderSide(color: AppColors.pink),
                             minimumSize: const Size(140, 44),
                           ),
-                          onPressed: () => _changeStatus(OrderStatus.batal),
+                          onPressed: _confirmCancelOrder,
                         ),
                     ],
                   ),

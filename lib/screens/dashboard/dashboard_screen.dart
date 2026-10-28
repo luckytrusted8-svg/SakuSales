@@ -153,6 +153,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 o.status != OrderStatus.batal;
           }).toList();
 
+          final todayPaidOrders = todayOrders.where((o) =>
+              o.status == OrderStatus.lunas ||
+              o.status == OrderStatus.diproses ||
+              o.status == OrderStatus.selesai).toList();
+          final omzetLunasHariIni = todayPaidOrders.fold<int>(0, (sum, o) => sum + o.total);
+
+          final todayPendingOrders = todayOrders.where((o) =>
+              o.status == OrderStatus.baru ||
+              o.status == OrderStatus.menunggu_bayar).toList();
+          final omzetPendingHariIni = todayPendingOrders.fold<int>(0, (sum, o) => sum + o.total);
+
           final omzetHariIni = todayOrders.fold<int>(0, (sum, o) => sum + o.total);
 
           final thisMonthOrders = orders.where((o) {
@@ -337,9 +348,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: AppColors.primary,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'Lunas: ${CurrencyFormatter.format(omzetLunasHariIni)}',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.statusMenungguBayar.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'Tertunda: ${CurrencyFormatter.format(omzetPendingHariIni)}',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.statusMenungguBayar,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
                         Text(
-                          'Total pemasukan dari pesanan yang masuk pada hari ini.',
+                          'Total estimasi omzet seluruh pesanan hari ini.',
                           style: GoogleFonts.nunito(
                             fontSize: 11,
                             color: textMuted,

@@ -1107,6 +1107,98 @@ body {
   color: var(--color-primary);
 }
 
+/* QRIS Payment Card */
+.qris-payment-card {
+  background-color: #FFFFFF;
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-tactile-sm);
+  padding: 16px;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.qris-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px dashed var(--color-border);
+}
+
+.qris-icon-badge {
+  width: 44px;
+  height: 44px;
+  background-color: var(--color-accent-soft);
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink);
+  flex-shrink: 0;
+}
+
+.qris-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.qris-subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  margin-top: 2px;
+}
+
+.qris-image-wrapper {
+  margin: 12px auto;
+  max-width: 260px;
+  background-color: #FFFFFF;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.qris-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+.qris-amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--color-primary-soft);
+  border: 1.5px dashed var(--color-primary);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin: 12px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.qris-amount-val {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  color: var(--color-primary-dark);
+}
+
+.qris-note {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  line-height: 1.4;
+  margin-top: 6px;
+}
+
 .summary-table {
   width: 100%;
   margin: 12px 0 0;

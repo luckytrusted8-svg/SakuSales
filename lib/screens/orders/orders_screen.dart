@@ -17,6 +17,8 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
   OrderStatus? _selectedStatus;
   String? _selectedPoId;
   List<PoSession> _poList = [];
@@ -26,7 +28,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
   void initState() {
     super.initState();
     _loadPoSessions();
-    SupabaseService.instance.subscribeToNewOrdersSound();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPoSessions() async {
@@ -106,9 +113,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
           }
 
           final allOrders = snapshot.data ?? [];
-          final filteredOrders = _selectedStatus == null
+          final statusFiltered = _selectedStatus == null
               ? allOrders
               : allOrders.where((o) => o.status == _selectedStatus).toList();
+
+          final filteredOrders = statusFiltered.where((o) {
+            if (_searchQuery.isEmpty) return true;
+            final q = _searchQuery.toLowerCase();
+            final nameMatch = o.buyerName.toLowerCase().contains(q);
+            final waMatch = o.buyerWa.contains(q);
+            return nameMatch || waMatch;
+          }).toList();
 
           return Column(
             children: [
@@ -125,10 +140,62 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Kolom Pencarian Cepat Nama & WhatsApp
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+                      child: TextField(
+                        controller: _searchController,
+                        style: GoogleFonts.nunito(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Cari nama pemesan atau nomor WA...',
+                          hintStyle: GoogleFonts.nunito(
+                            fontSize: 13,
+                            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                          ),
+                          prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 18),
+                                  onPressed: () {
+                                    setState(() {
+                                      _searchController.clear();
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                          isDense: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                          ),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF252936) : Colors.white,
+                        ),
+                        onChanged: (val) {
+                          setState(() {
+                            _searchQuery = val.trim();
+                          });
+                        },
+                      ),
+                    ),
+
                     // PO Selector Dropdown
                     if (!_isLoadingPo && _poList.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
                         child: Container(
                           height: 44,
                           padding: const EdgeInsets.symmetric(horizontal: 12),
