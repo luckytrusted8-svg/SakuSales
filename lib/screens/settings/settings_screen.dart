@@ -18,16 +18,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _urlCtrl = TextEditingController(text: AppConfig.supabaseUrl);
   final _keyCtrl = TextEditingController(text: AppConfig.supabaseAnonKey);
   final _oneSignalCtrl = TextEditingController(text: AppConfig.oneSignalAppId);
+  final _oneSignalRestCtrl = TextEditingController(text: AppConfig.oneSignalRestApiKey);
   final _waCtrl = TextEditingController(text: AppConfig.sellerWa);
 
   bool _isSaving = false;
+  bool _isTestingPush = false;
   bool _hideApiKey = true;
+  bool _hideOneSignalKey = true;
 
   @override
   void dispose() {
     _urlCtrl.dispose();
     _keyCtrl.dispose();
     _oneSignalCtrl.dispose();
+    _oneSignalRestCtrl.dispose();
     _waCtrl.dispose();
     super.dispose();
   }
@@ -39,6 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         url: _urlCtrl.text,
         anonKey: _keyCtrl.text,
         oneSignalId: _oneSignalCtrl.text,
+        oneSignalRestKey: _oneSignalRestCtrl.text,
         wa: _waCtrl.text,
       );
       if (mounted) {
@@ -64,6 +69,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  Future<void> _handleTestPushNotification() async {
+    final appId = _oneSignalCtrl.text.trim();
+    final restKey = _oneSignalRestCtrl.text.trim();
+
+    if (appId.isEmpty || restKey.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.accentDark,
+          content: Text(
+            'Harap isi OneSignal App ID dan REST API Key di bawah terlebih dahulu.',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isTestingPush = true);
+    try {
+      final success = await NotificationService.sendPushNotification(
+        appId: appId,
+        restApiKey: restKey,
+        title: 'Uji Push Notifikasi SakuSales',
+        body: 'Notifikasi berhasil tembus! SakuSales siap menerima pesanan saat app ditutup.',
+        data: {'test': true},
+      );
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: AppColors.success,
+              duration: Duration(seconds: 4),
+              content: Text(
+                'Sinyal terkirim ke OneSignal! Segera keluar aplikasi atau kunci layar untuk melihat notifikasi muncul.',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: AppColors.danger,
+              content: Text(
+                'Gagal mengirim notifikasi. Periksa kembali OneSignal REST API Key Anda.',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.danger,
+            content: Text('Terjadi kesalahan: ${e.toString()}'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isTestingPush = false);
       }
     }
   }
@@ -409,6 +481,111 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
+            const SizedBox(height: 12),
+
+            // Card Uji Push Notifikasi Luar Aplikasi
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: cardBorder, width: 1.0),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.statusBaru.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.cell_tower_rounded,
+                          size: 18,
+                          color: AppColors.statusBaru,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Uji Push Notifikasi (Luar App)',
+                              style: GoogleFonts.nunito(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Kirim sinyal OneSignal untuk uji saat HP terkunci',
+                              style: GoogleFonts.nunito(
+                                fontSize: 11,
+                                color: textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.statusBaru.withValues(alpha: 0.15),
+                          foregroundColor: AppColors.statusBaru,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          minimumSize: const Size(0, 36),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: _isTestingPush ? null : _handleTestPushNotification,
+                        icon: _isTestingPush
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.send_rounded, size: 16),
+                        label: Text(
+                          _isTestingPush ? 'Mengirim...' : 'Kirim Uji',
+                          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E212B) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.accentDark),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Tips HP Xiaomi / Poco / Vivo: Buka Info Aplikasi SakuSales di Setelan HP -> Aktifkan "Mulai Otomatis" (Autostart) & atur Baterai ke "Tidak Ada Pembatasan" agar notifikasi selalu tembus.',
+                            style: GoogleFonts.nunito(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 20),
 
             // ================= GRUP 3: SISTEM =================
@@ -521,6 +698,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'OneSignal REST API Key',
+                          style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w800),
+                        ),
+                        InkWell(
+                          onTap: () => setState(() => _hideOneSignalKey = !_hideOneSignalKey),
+                          child: Text(
+                            _hideOneSignalKey ? 'Tampilkan' : 'Sembunyikan',
+                            style: GoogleFonts.nunito(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _oneSignalRestCtrl,
+                      obscureText: _hideOneSignalKey,
+                      style: GoogleFonts.nunito(fontSize: 12),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        hintText: 'os_v2_app_...',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Diperlukan agar notifikasi dapat dikirim saat HP di luar aplikasi / terkunci. Dapatkan dari OneSignal Dashboard -> Settings -> Keys & IDs.',
+                      style: GoogleFonts.nunito(fontSize: 10, color: textMuted),
                     ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(

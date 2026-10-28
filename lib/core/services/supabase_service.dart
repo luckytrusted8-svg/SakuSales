@@ -272,12 +272,30 @@ class SupabaseService {
           event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'orders',
-          callback: (payload) {
+          callback: (payload) async {
             debugPrint('Realtime pesanan baru terdeteksi via Supabase Realtime: ${payload.newRecord}');
             SoundService.playNewOrderSound();
             HapticFeedback.heavyImpact();
             if (onNewOrder != null && payload.newRecord.isNotEmpty) {
-              onNewOrder(payload.newRecord);
+              final record = Map<String, dynamic>.from(payload.newRecord);
+              final total = record['total'];
+              // Jika total masih 0 (karena DB belum selesai update rincian), ambil data terbaru
+              if ((total == null || total == 0) && record['id'] != null) {
+                try {
+                  await Future.delayed(const Duration(milliseconds: 400));
+                  final fresh = await client
+                      .from('orders')
+                      .select('total')
+                      .eq('id', record['id'])
+                      .maybeSingle();
+                  if (fresh != null && fresh['total'] != null && (fresh['total'] as num) > 0) {
+                    record['total'] = fresh['total'];
+                  }
+                } catch (e) {
+                  debugPrint('Gagal fetch total terbaru untuk notifikasi: $e');
+                }
+              }
+              onNewOrder(record);
             }
           },
         )

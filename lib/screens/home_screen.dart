@@ -33,11 +33,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _setupOrderNotifications() {
     SupabaseService.instance.subscribeToNewOrdersSound(
-      onNewOrder: (record) {
+      onNewOrder: (record) async {
         if (!mounted) return;
         final buyerName = record['buyer_name'] ?? 'Pelanggan';
-        final total = record['total'] ?? 0;
+        var total = record['total'] ?? 0;
 
+        // Fallback proteksi tambahan jika event INSERT pertama masih Rp 0
+        if ((total == 0 || total == null) && record['id'] != null) {
+          try {
+            await Future.delayed(const Duration(milliseconds: 300));
+            final fresh = await SupabaseService.instance.client
+                .from('orders')
+                .select('total')
+                .eq('id', record['id'])
+                .maybeSingle();
+            if (fresh != null && fresh['total'] != null && (fresh['total'] as num) > 0) {
+              total = fresh['total'];
+            }
+          } catch (e) {
+            debugPrint('Fallback fetch total order gagal: $e');
+          }
+        }
+
+        if (!mounted) return;
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

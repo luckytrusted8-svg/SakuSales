@@ -735,9 +735,13 @@
 
       if (rpcErr) throw rpcErr;
 
-      // 6. Ambil snapshot pesanan yang baru dibuat dari server untuk konfirmasi harga final
-      // Catatan: RLS anon tidak bisa select tabel orders, maka kita gunakan ringkasan dari cart
-      // dan preview total dari server function.
+      // 6. Hitung total belanja riil & kirim Push Notification ke HP penjual
+      const totalBelanja = cart.reduce(function (sum, item) {
+        return sum + (item.unit_price_preview * item.qty);
+      }, 0);
+      sendPushNotification(orderId, p_buyer, totalBelanja);
+
+      // 7. Ambil snapshot pesanan yang baru dibuat untuk konfirmasi harga final
       showSuccessView({
         order_id: orderId,
         buyer: p_buyer,
@@ -887,6 +891,43 @@
 
     elSuccessCard.style.display = "block";
     elSuccessCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // Kirim Push Notification ke OneSignal (tembus ke HP penjual saat di luar aplikasi / layar mati)
+  async function sendPushNotification(orderId, buyer, totalAmount) {
+    try {
+      const config = window.SAKUSALES_CONFIG || {};
+      const appId = config.ONESIGNAL_APP_ID || "6e7d4167-3a83-49b2-88fc-1a19a7bd77e5";
+      const apiKey = config.ONESIGNAL_REST_API_KEY;
+
+      if (!apiKey || apiKey.trim() === "") {
+        console.warn("OneSignal REST API Key belum disetel di config.js. Notifikasi background luar aplikasi tidak dikirim.");
+        return;
+      }
+
+      const paymentLabel = buyer.payment === "qris" ? "QRIS" : "Cash";
+      const payload = {
+        app_id: appId.trim(),
+        included_segments: ["Total Subscriptions"],
+        headings: { en: "Pesanan Baru Masuk!" },
+        contents: { en: buyer.name + " : " + formatRupiah(totalAmount) + " (" + paymentLabel + ")" },
+        android_channel_id: "pesanan_baru",
+        data: { order_id: orderId }
+      };
+
+      const res = await fetch("https://api.onesignal.com/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Key " + apiKey.trim()
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      console.log("OneSignal push notification result:", data);
+    } catch (err) {
+      console.warn("Gagal mengirim OneSignal push notification:", err);
+    }
   }
 
   // Mulai saat halaman siap
