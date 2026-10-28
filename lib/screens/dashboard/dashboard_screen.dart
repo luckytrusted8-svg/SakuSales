@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+  import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -739,67 +739,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     )
                   else
+                    // ================= EMPTY STATE SESI PO (CENTER ALIGNED) =================
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                       decoration: BoxDecoration(
                         color: cardBg,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: cardBorder, width: 1.0),
                       ),
-                      child: Row(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          // 1. Ikon kalender di paling atas
                           Container(
-                            width: 44,
-                            height: 44,
+                            width: 52,
+                            height: 52,
                             decoration: BoxDecoration(
                               color: AppColors.accent.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
-                              Icons.calendar_today_outlined,
-                              size: 22,
+                              Icons.calendar_today_rounded,
+                              size: 26,
                               color: AppColors.accentDark,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Belum Ada PO yang Aktif',
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Buka sesi pre order sekarang agar pelanggan bisa memesan.',
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 11,
-                                    color: textMuted,
-                                  ),
-                                ),
-                              ],
+                          const SizedBox(height: 14),
+
+                          // 2. Judul bold 'Belum Ada PO yang Aktif'
+                          Text(
+                            'Belum Ada PO yang Aktif',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.fredoka(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
+                          const SizedBox(height: 6),
+
+                          // 3. Subjudul redup 'Buka sesi PO sekarang agar pelanggan bisa memesan.'
+                          Text(
+                            'Buka sesi PO sekarang agar pelanggan bisa memesan.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.nunito(
+                              fontSize: 12,
+                              color: textMuted,
+                              height: 1.4,
                             ),
-                            onPressed: _openCreatePo,
-                            child: Text(
-                              'Buka PO',
-                              style: GoogleFonts.nunito(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
+                          ),
+                          const SizedBox(height: 18),
+
+                          // 4. Tombol utama '+ Buka Sesi PO Baru' tepat di bawah deskripsi
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: _openCreatePo,
+                              icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                              label: Text(
+                                '+ Buka Sesi PO Baru',
+                                style: GoogleFonts.fredoka(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ),
