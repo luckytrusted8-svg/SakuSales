@@ -908,7 +908,7 @@
       const paymentLabel = buyer.payment === "qris" ? "QRIS" : "Cash";
       const payload = {
         app_id: appId.trim(),
-        included_segments: ["Subscribed Users"],
+        included_segments: ["Total Subscriptions"],
         headings: { en: "Pesanan Baru Masuk!" },
         contents: { en: buyer.name + " : " + formatRupiah(totalAmount) + " (" + paymentLabel + ")" },
         priority: 10,

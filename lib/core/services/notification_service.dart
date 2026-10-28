@@ -87,7 +87,7 @@ class NotificationService {
 
       final payload = jsonEncode({
         'app_id': appId.trim(),
-        'included_segments': ['Subscribed Users'],
+        'included_segments': ['Total Subscriptions'],
         'headings': {'en': title},
         'contents': {'en': body},
         'priority': 10,
