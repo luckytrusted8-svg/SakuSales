@@ -67,31 +67,20 @@
       </section>
 
       <!-- Daftar Produk dan Ukuran -->
-      <section class="section-block">
+      <section class="section-block" id="menu-section">
         <div class="section-header">
-          <span class="step-num">1</span>
+          <span class="step-num" id="step-menu-num">1</span>
           <h3 class="section-title">Pilih Menu &amp; Rasa</h3>
         </div>
         <div id="product-list"></div>
       </section>
 
-      <!-- Keranjang Belanja -->
-      <section class="section-block" id="cart-section">
+      <!-- Keranjang Belanja (Sticky & Tersembunyi saat Kosong) -->
+      <section class="section-block" id="cart-section" style="display: none;">
         <div class="section-header">
-          <span class="step-num">2</span>
+          <span class="step-num" id="step-cart-num">2</span>
           <h3 class="section-title">Keranjang Pesanan</h3>
-        </div>
-
-        <div id="cart-empty" class="state-card empty-cart-card">
-          <div class="empty-icon-wrap">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF5500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="9" cy="21" r="1"></circle>
-              <circle cx="20" cy="21" r="1"></circle>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-            </svg>
-          </div>
-          <p class="state-title" style="font-size: 15px;">Keranjang masih kosong</p>
-          <p class="state-sub">Pilih ukuran dan rasa menu di atas untuk menambahkan</p>
+          <span id="cart-count-badge" class="cart-count-badge">0 item</span>
         </div>
 
         <div id="cart-items" class="cart-items-box"></div>
@@ -100,7 +89,7 @@
       <!-- Formulir Data Pembeli -->
       <section class="section-block" id="checkout-section">
         <div class="section-header">
-          <span class="step-num">3</span>
+          <span class="step-num" id="step-checkout-num">2</span>
           <h3 class="section-title">Data Pengantaran &amp; Pembeli</h3>
         </div>
 
@@ -204,17 +193,16 @@
   <aside id="cart-bar" class="cart-bar" style="display: none;">
     <div class="cart-bar-inner">
       <div class="cart-bar-info">
-        <span class="cart-badge-dot"></span>
+        <span id="cart-bar-count" class="cart-bar-count-badge">0 item</span>
         <div>
           <div class="cart-total-label">Total Pesanan:</div>
           <div id="cart-total" class="cart-total-value">Rp 0</div>
         </div>
       </div>
-      <a href="#checkout-section" class="btn btn-cart-jump">
-        <span>Selesaikan Pesanan</span>
+      <a href="#cart-section" id="btn-cart-jump" class="btn btn-cart-jump">
+        <span>Lihat Keranjang &amp; Bayar</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
+          <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
       </a>
     </div>

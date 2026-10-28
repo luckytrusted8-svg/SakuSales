@@ -29,6 +29,7 @@
   const elPoTitle = document.getElementById("po-title");
   const elPoMeta = document.getElementById("po-meta");
   const elProductList = document.getElementById("product-list");
+  const elCartSection = document.getElementById("cart-section");
   const elCartItems = document.getElementById("cart-items");
   const elCartEmpty = document.getElementById("cart-empty");
   const elCartBar = document.getElementById("cart-bar");
@@ -155,6 +156,8 @@
 
       renderPoHeader();
       renderCatalog();
+      updatePickupState();
+      renderCart();
 
       elLoading.style.display = "none";
       elMain.style.display = "block";
@@ -181,7 +184,7 @@
     elPoMeta.innerHTML = '<span class="badge-open"><span class="pulse-dot"></span> BUKA</span> <span>' + metaText + '</span>';
   }
 
-  // Render katalog produk & ukuran
+  // Render katalog produk & ukuran (Ringkas Varian per Produk)
   function renderCatalog() {
     if (products.length === 0) {
       elProductList.innerHTML = '<div class="empty-state"><p>Belum ada produk yang aktif untuk PO ini.</p></div>';
@@ -196,211 +199,338 @@
 
       const card = document.createElement("div");
       card.className = "product-card";
+      card.id = "product-card-" + product.id;
 
-      const title = document.createElement("h3");
-      title.className = "product-title";
-      title.textContent = product.name;
-      card.appendChild(title);
+      // State lokal untuk kartu produk ini
+      let currentSize = prodSizes[0];
+      let selectedGlazeIds = [];
+      // Auto-select glaze pertama jika ukuran include glaze
+      if (currentSize.included_glaze > 0 && glazes.length > 0) {
+        selectedGlazeIds.push(glazes[0].id);
+      }
+      let selectedToppingIds = [];
+      let itemQty = 1;
+
+      // Header Produk
+      const header = document.createElement("div");
+      header.className = "product-header";
+      header.innerHTML =
+        '<h3 class="product-title">' + product.name + '</h3>' +
+        '<span class="product-badge">' + prodSizes.length + ' Pilihan Ukuran</span>';
+      card.appendChild(header);
+
+      // Wrapper Selector Ukuran (Pill Selector)
+      const sizeSelectorBlock = document.createElement("div");
+      sizeSelectorBlock.className = "size-selector-block";
+
+      const sizeLabel = document.createElement("label");
+      sizeLabel.className = "customizer-label";
+      sizeLabel.textContent = "Pilihan Ukuran Kemasan:";
+      sizeSelectorBlock.appendChild(sizeLabel);
+
+      const sizePillsWrap = document.createElement("div");
+      sizePillsWrap.className = "size-pills-wrap";
+
+      const sizePillButtons = [];
 
       prodSizes.forEach(function (size) {
-        const sizeBlock = document.createElement("div");
-        sizeBlock.className = "size-item";
-        sizeBlock.id = "size-block-" + size.id;
+        const pillBtn = document.createElement("button");
+        pillBtn.type = "button";
+        pillBtn.className = "size-pill" + (size.id === currentSize.id ? " active" : "");
+        pillBtn.innerHTML =
+          '<span>' + size.name + ' (' + size.pieces + ' pcs)</span>' +
+          '<span class="pill-price">' + formatRupiah(size.price) + '</span>';
 
-        // Customizer state untuk item ini
-        let selectedGlazeIds = [];
-        let selectedToppingIds = [];
-        let itemQty = 1;
+        pillBtn.addEventListener("click", function () {
+          currentSize = size;
+          sizePillButtons.forEach(function (btn) { btn.classList.remove("active"); });
+          pillBtn.classList.add("active");
 
-        // Header Ukuran
-        const header = document.createElement("div");
-        header.className = "size-header";
-        header.innerHTML =
-          '<div>' +
-            '<div class="size-name">' + size.name + '</div>' +
-            '<div class="size-pieces">' + size.pieces + ' pcs</div>' +
-          '</div>' +
-          '<div class="size-price" id="price-display-' + size.id + '">' + formatRupiah(size.price) + '</div>';
-        sizeBlock.appendChild(header);
-
-        // Customizer
-        const customizer = document.createElement("div");
-        customizer.className = "customizer";
-
-        // Pilihan Glaze
-        if (glazes.length > 0) {
-          const glazeLabel = document.createElement("label");
-          glazeLabel.className = "customizer-label";
-          glazeLabel.innerHTML = 'Pilih Glaze / Rasa <span class="customizer-hint">(Termasuk ' + size.included_glaze + ', ekstra ' + formatRupiah(size.extra_glaze_price) + ')</span>';
-          customizer.appendChild(glazeLabel);
-
-          const glazeChips = document.createElement("div");
-          glazeChips.className = "chips-group";
-
-          glazes.forEach(function (g) {
-            const chip = document.createElement("button");
-            chip.type = "button";
-            chip.className = "chip-select";
-            chip.innerHTML = '<span>' + g.name + '</span>';
-
-            chip.addEventListener("click", function () {
-              const idx = selectedGlazeIds.indexOf(g.id);
-              if (idx > -1) {
-                selectedGlazeIds.splice(idx, 1);
-                chip.classList.remove("selected");
-              } else {
-                selectedGlazeIds.push(g.id);
-                chip.classList.add("selected");
-              }
-              updatePriceDisplay();
-            });
-
-            glazeChips.appendChild(chip);
-          });
-          customizer.appendChild(glazeChips);
-        }
-
-        // Pilihan Topping
-        if (toppings.length > 0) {
-          const toppingLabel = document.createElement("label");
-          toppingLabel.className = "customizer-label";
-          toppingLabel.innerHTML = 'Pilih Topping Tambahan';
-          customizer.appendChild(toppingLabel);
-
-          const toppingChips = document.createElement("div");
-          toppingChips.className = "chips-group";
-
-          toppings.forEach(function (t) {
-            const chip = document.createElement("button");
-            chip.type = "button";
-            chip.className = "chip-select";
-            chip.innerHTML = '<span>' + t.name + '</span> <span class="chip-extra">(+' + formatRupiah(t.extra_price) + ')</span>';
-
-            chip.addEventListener("click", function () {
-              const idx = selectedToppingIds.indexOf(t.id);
-              if (idx > -1) {
-                selectedToppingIds.splice(idx, 1);
-                chip.classList.remove("selected");
-              } else {
-                selectedToppingIds.push(t.id);
-                chip.classList.add("selected");
-              }
-              updatePriceDisplay();
-            });
-
-            toppingChips.appendChild(chip);
-          });
-          customizer.appendChild(toppingChips);
-        }
-
-        // Catatan item
-        const noteGroup = document.createElement("div");
-        noteGroup.style.marginTop = "8px";
-        const noteInput = document.createElement("input");
-        noteInput.type = "text";
-        noteInput.className = "form-input";
-        noteInput.placeholder = "Catatan khusus (contoh: jangan terlalu manis)";
-        noteGroup.appendChild(noteInput);
-        customizer.appendChild(noteGroup);
-
-        // Hitung harga satuan preview
-        function calculateUnitPrice() {
-          const extraGlazesCount = Math.max(0, selectedGlazeIds.length - size.included_glaze);
-          const extraGlazeTotal = extraGlazesCount * size.extra_glaze_price;
-
-          let extraToppingTotal = 0;
-          selectedToppingIds.forEach(function (tid) {
-            const top = toppings.find(function (t) { return t.id === tid; });
-            if (top) extraToppingTotal += top.extra_price;
-          });
-
-          return size.price + extraGlazeTotal + extraToppingTotal;
-        }
-
-        function updatePriceDisplay() {
-          const unitPrice = calculateUnitPrice();
-          const displayEl = document.getElementById("price-display-" + size.id);
-          if (displayEl) {
-            displayEl.textContent = formatRupiah(unitPrice * itemQty);
+          // Auto-pilih glaze jika belum ada yang terpilih
+          if (currentSize.included_glaze > 0 && selectedGlazeIds.length === 0 && glazes.length > 0) {
+            selectedGlazeIds.push(glazes[0].id);
           }
-        }
 
-        // Baris Aksi Qty dan Tombol Tambah
-        const actionRow = document.createElement("div");
-        actionRow.className = "action-row";
-
-        const qtyCtrl = document.createElement("div");
-        qtyCtrl.className = "qty-control";
-
-        const minusBtn = document.createElement("button");
-        minusBtn.type = "button";
-        minusBtn.className = "qty-btn qty-minus";
-        minusBtn.textContent = "-";
-        minusBtn.addEventListener("click", function () {
-          if (itemQty > 1) {
-            itemQty--;
-            qtyVal.textContent = itemQty;
-            updatePriceDisplay();
-          }
+          updateProductCardUI();
         });
 
-        const qtyVal = document.createElement("span");
-        qtyVal.className = "qty-val";
-        qtyVal.textContent = "1";
-
-        const plusBtn = document.createElement("button");
-        plusBtn.type = "button";
-        plusBtn.className = "qty-btn qty-plus";
-        plusBtn.textContent = "+";
-        plusBtn.addEventListener("click", function () {
-          itemQty++;
-          qtyVal.textContent = itemQty;
-          updatePriceDisplay();
-        });
-
-        qtyCtrl.appendChild(minusBtn);
-        qtyCtrl.appendChild(qtyVal);
-        qtyCtrl.appendChild(plusBtn);
-
-        const addBtn = document.createElement("button");
-        addBtn.type = "button";
-        addBtn.className = "btn btn-primary";
-        addBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> <span>Tambah ke Keranjang</span>';
-        addBtn.addEventListener("click", function () {
-          addToCart({
-            size_id: size.id,
-            size_name: size.name,
-            product_name: product.name,
-            qty: itemQty,
-            glaze_ids: [...selectedGlazeIds],
-            glaze_names: selectedGlazeIds.map(function (gid) {
-              const g = glazes.find(function (item) { return item.id === gid; });
-              return g ? g.name : "";
-            }),
-            topping_ids: [...selectedToppingIds],
-            topping_names: selectedToppingIds.map(function (tid) {
-              const t = toppings.find(function (item) { return item.id === tid; });
-              return t ? t.name : "";
-            }),
-            unit_price_preview: calculateUnitPrice(),
-            note: noteInput.value.trim()
-          });
-
-          // Reset input catatan & kuantitas
-          noteInput.value = "";
-          itemQty = 1;
-          qtyVal.textContent = "1";
-          updatePriceDisplay();
-        });
-
-        actionRow.appendChild(qtyCtrl);
-        actionRow.appendChild(addBtn);
-
-        sizeBlock.appendChild(customizer);
-        sizeBlock.appendChild(actionRow);
-        card.appendChild(sizeBlock);
+        sizePillButtons.push(pillBtn);
+        sizePillsWrap.appendChild(pillBtn);
       });
 
+      sizeSelectorBlock.appendChild(sizePillsWrap);
+      card.appendChild(sizeSelectorBlock);
+
+      // Box Customizer (Glaze, Topping, Note)
+      const customizerBox = document.createElement("div");
+      customizerBox.className = "customizer-box";
+
+      // Meta bar (Ukuran aktif & harga)
+      const metaBar = document.createElement("div");
+      metaBar.className = "customizer-meta-bar";
+      metaBar.innerHTML =
+        '<div class="meta-size-info">' +
+          '<span class="meta-size-name" id="meta-name-' + product.id + '">' + currentSize.name + '</span>' +
+          '<span class="meta-pieces" id="meta-pcs-' + product.id + '">' + currentSize.pieces + ' pcs</span>' +
+        '</div>' +
+        '<div class="meta-price" id="meta-price-' + product.id + '">' + formatRupiah(currentSize.price) + '</div>';
+      customizerBox.appendChild(metaBar);
+
+      // Pilihan Glaze / Rasa
+      let glazeChipsWrap = null;
+      let glazeHintEl = null;
+
+      if (glazes.length > 0) {
+        const glazeGroup = document.createElement("div");
+        glazeGroup.className = "customizer-group";
+
+        const glazeLabelRow = document.createElement("div");
+        glazeLabelRow.className = "customizer-label-row";
+
+        const glazeLbl = document.createElement("label");
+        glazeLbl.className = "customizer-label";
+        glazeLbl.textContent = "Pilihan Glaze / Rasa";
+
+        glazeHintEl = document.createElement("span");
+        glazeHintEl.className = "customizer-hint";
+        glazeHintEl.id = "glaze-hint-" + product.id;
+        glazeHintEl.textContent = "Termasuk " + currentSize.included_glaze + " rasa, ekstra " + formatRupiah(currentSize.extra_glaze_price);
+
+        glazeLabelRow.appendChild(glazeLbl);
+        glazeLabelRow.appendChild(glazeHintEl);
+        glazeGroup.appendChild(glazeLabelRow);
+
+        glazeChipsWrap = document.createElement("div");
+        glazeChipsWrap.className = "chips-group";
+
+        glazes.forEach(function (g) {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "chip-select" + (selectedGlazeIds.includes(g.id) ? " selected" : "");
+          chip.innerHTML = '<span>' + g.name + '</span>';
+
+          chip.addEventListener("click", function () {
+            const idx = selectedGlazeIds.indexOf(g.id);
+            if (idx > -1) {
+              selectedGlazeIds.splice(idx, 1);
+            } else {
+              // Jika ukuran hanya include 1 glaze dan belum ada ekstra,
+              // mengklik chip lain otomatis menggantikan pilihan rasa agar tidak merepotkan pembeli
+              if (currentSize.included_glaze === 1 && selectedGlazeIds.length >= 1) {
+                selectedGlazeIds = [g.id];
+              } else {
+                selectedGlazeIds.push(g.id);
+              }
+            }
+            updateProductCardUI();
+          });
+
+          glazeChipsWrap.appendChild(chip);
+        });
+
+        glazeGroup.appendChild(glazeChipsWrap);
+        customizerBox.appendChild(glazeGroup);
+      }
+
+      // Pilihan Topping Tambahan
+      let toppingChipsWrap = null;
+      if (toppings.length > 0) {
+        const toppingGroup = document.createElement("div");
+        toppingGroup.className = "customizer-group";
+
+        const toppingLabelRow = document.createElement("div");
+        toppingLabelRow.className = "customizer-label-row";
+        const topLbl = document.createElement("label");
+        topLbl.className = "customizer-label";
+        topLbl.textContent = "Topping Tambahan (Opsional)";
+        toppingLabelRow.appendChild(topLbl);
+        toppingGroup.appendChild(toppingLabelRow);
+
+        toppingChipsWrap = document.createElement("div");
+        toppingChipsWrap.className = "chips-group";
+
+        toppings.forEach(function (t) {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "chip-select" + (selectedToppingIds.includes(t.id) ? " selected" : "");
+          chip.innerHTML = '<span>' + t.name + '</span> <span class="chip-extra">(+' + formatRupiah(t.extra_price) + ')</span>';
+
+          chip.addEventListener("click", function () {
+            const idx = selectedToppingIds.indexOf(t.id);
+            if (idx > -1) {
+              selectedToppingIds.splice(idx, 1);
+            } else {
+              selectedToppingIds.push(t.id);
+            }
+            updateProductCardUI();
+          });
+
+          toppingChipsWrap.appendChild(chip);
+        });
+
+        toppingGroup.appendChild(toppingChipsWrap);
+        customizerBox.appendChild(toppingGroup);
+      }
+
+      // Catatan Khusus
+      const noteGroup = document.createElement("div");
+      noteGroup.className = "customizer-group";
+      const noteInput = document.createElement("input");
+      noteInput.type = "text";
+      noteInput.className = "form-input";
+      noteInput.placeholder = "Catatan khusus (contoh: jangan terlalu manis)";
+      noteGroup.appendChild(noteInput);
+      customizerBox.appendChild(noteGroup);
+
+      card.appendChild(customizerBox);
+
+      // Hitung harga satuan item
+      function calculateUnitPrice() {
+        const extraGlazesCount = Math.max(0, selectedGlazeIds.length - currentSize.included_glaze);
+        const extraGlazeTotal = extraGlazesCount * currentSize.extra_glaze_price;
+
+        let extraToppingTotal = 0;
+        selectedToppingIds.forEach(function (tid) {
+          const top = toppings.find(function (t) { return t.id === tid; });
+          if (top) extraToppingTotal += top.extra_price;
+        });
+
+        return currentSize.price + extraGlazeTotal + extraToppingTotal;
+      }
+
+      // Baris Aksi (Stepper Qty & Tombol Tambah ke Keranjang)
+      const actionRow = document.createElement("div");
+      actionRow.className = "action-row";
+
+      const qtyCtrl = document.createElement("div");
+      qtyCtrl.className = "qty-control";
+
+      const minusBtn = document.createElement("button");
+      minusBtn.type = "button";
+      minusBtn.className = "qty-btn qty-minus";
+      minusBtn.setAttribute("aria-label", "Kurang");
+      minusBtn.textContent = "-";
+      minusBtn.addEventListener("click", function () {
+        if (itemQty > 1) {
+          itemQty--;
+          qtyVal.textContent = itemQty;
+          updateProductCardUI();
+        }
+      });
+
+      const qtyVal = document.createElement("span");
+      qtyVal.className = "qty-val";
+      qtyVal.textContent = "1";
+
+      const plusBtn = document.createElement("button");
+      plusBtn.type = "button";
+      plusBtn.className = "qty-btn qty-plus";
+      plusBtn.setAttribute("aria-label", "Tambah");
+      plusBtn.textContent = "+";
+      plusBtn.addEventListener("click", function () {
+        itemQty++;
+        qtyVal.textContent = itemQty;
+        updateProductCardUI();
+      });
+
+      qtyCtrl.appendChild(minusBtn);
+      qtyCtrl.appendChild(qtyVal);
+      qtyCtrl.appendChild(plusBtn);
+
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "btn btn-primary";
+
+      function updateProductCardUI() {
+        const metaNameEl = document.getElementById("meta-name-" + product.id);
+        const metaPcsEl = document.getElementById("meta-pcs-" + product.id);
+        const metaPriceEl = document.getElementById("meta-price-" + product.id);
+
+        if (metaNameEl) metaNameEl.textContent = currentSize.name;
+        if (metaPcsEl) metaPcsEl.textContent = currentSize.pieces + " pcs";
+        if (metaPriceEl) metaPriceEl.textContent = formatRupiah(currentSize.price);
+
+        if (glazeHintEl) {
+          glazeHintEl.textContent = "Termasuk " + currentSize.included_glaze + " rasa, ekstra " + formatRupiah(currentSize.extra_glaze_price);
+        }
+
+        // Sinkronisasi status selected chip glaze
+        if (glazeChipsWrap) {
+          const chips = glazeChipsWrap.querySelectorAll(".chip-select");
+          chips.forEach(function (chip, gIdx) {
+            const g = glazes[gIdx];
+            if (g && selectedGlazeIds.includes(g.id)) {
+              chip.classList.add("selected");
+            } else {
+              chip.classList.remove("selected");
+            }
+          });
+        }
+
+        // Sinkronisasi status selected chip topping
+        if (toppingChipsWrap) {
+          const chips = toppingChipsWrap.querySelectorAll(".chip-select");
+          chips.forEach(function (chip, tIdx) {
+            const t = toppings[tIdx];
+            if (t && selectedToppingIds.includes(t.id)) {
+              chip.classList.add("selected");
+            } else {
+              chip.classList.remove("selected");
+            }
+          });
+        }
+
+        const unitPrice = calculateUnitPrice();
+        const subtotal = unitPrice * itemQty;
+        addBtn.innerHTML =
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+            '<circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>' +
+            '<path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>' +
+          '</svg> ' +
+          '<span>Tambah ke Keranjang · ' + formatRupiah(subtotal) + '</span>';
+      }
+
+      addBtn.addEventListener("click", function () {
+        const glazeNames = selectedGlazeIds.map(function (gid) {
+          const g = glazes.find(function (item) { return item.id === gid; });
+          return g ? g.name : "";
+        }).filter(Boolean);
+
+        const toppingNames = selectedToppingIds.map(function (tid) {
+          const t = toppings.find(function (item) { return item.id === tid; });
+          return t ? t.name : "";
+        }).filter(Boolean);
+
+        addToCart({
+          size_id: currentSize.id,
+          size_name: currentSize.name,
+          product_name: product.name,
+          qty: itemQty,
+          glaze_ids: [...selectedGlazeIds],
+          glaze_names: glazeNames,
+          topping_ids: [...selectedToppingIds],
+          topping_names: toppingNames,
+          unit_price_preview: calculateUnitPrice(),
+          note: noteInput.value.trim()
+        });
+
+        // Feedback tactile cepat
+        addBtn.innerHTML = '<span>✓ Masuk Keranjang!</span>';
+        setTimeout(function () {
+          updateProductCardUI();
+        }, 800);
+
+        // Reset kuantitas dan catatan
+        noteInput.value = "";
+        itemQty = 1;
+        qtyVal.textContent = "1";
+      });
+
+      actionRow.appendChild(qtyCtrl);
+      actionRow.appendChild(addBtn);
+      card.appendChild(actionRow);
+
+      updateProductCardUI();
       elProductList.appendChild(card);
     });
   }
@@ -418,18 +548,40 @@
     renderCart();
   }
 
-  // Render Keranjang
+  // Render Keranjang Pesanan & Update Nomor Langkah
   function renderCart() {
+    const totalCount = cart.reduce(function (sum, it) { return sum + it.qty; }, 0);
+
+    const elStepMenuNum = document.getElementById("step-menu-num");
+    const elStepCartNum = document.getElementById("step-cart-num");
+    const elStepCheckoutNum = document.getElementById("step-checkout-num");
+    const elCartCountBadge = document.getElementById("cart-count-badge");
+    const elCartBarCount = document.getElementById("cart-bar-count");
+
     if (cart.length === 0) {
       elCartItems.innerHTML = "";
-      elCartEmpty.style.display = "block";
+      if (elCartEmpty) elCartEmpty.style.display = "none";
+      if (elCartSection) elCartSection.style.display = "none";
       elCartBar.style.display = "none";
       elCartPreviewTotal.textContent = "Rp 0";
+
+      // Step indicator jika keranjang kosong: Menu (1), Checkout (2)
+      if (elStepMenuNum) elStepMenuNum.textContent = "1";
+      if (elStepCheckoutNum) elStepCheckoutNum.textContent = "2";
       return;
     }
 
-    elCartEmpty.style.display = "none";
+    if (elCartEmpty) elCartEmpty.style.display = "none";
+    if (elCartSection) elCartSection.style.display = "block";
     elCartItems.innerHTML = "";
+
+    // Step indicator jika ada keranjang: Menu (1), Keranjang (2), Checkout (3)
+    if (elStepMenuNum) elStepMenuNum.textContent = "1";
+    if (elStepCartNum) elStepCartNum.textContent = "2";
+    if (elStepCheckoutNum) elStepCheckoutNum.textContent = "3";
+
+    if (elCartCountBadge) elCartCountBadge.textContent = totalCount + " item";
+    if (elCartBarCount) elCartBarCount.textContent = totalCount + " item";
 
     let totalPreview = 0;
 
@@ -440,22 +592,28 @@
       const row = document.createElement("div");
       row.className = "cart-item-row";
 
-      let metaParts = [];
-      if (item.glaze_names.length > 0) {
-        metaParts.push("Glaze: " + item.glaze_names.join(", "));
+      let tagsHtml = "";
+      if (item.glaze_names && item.glaze_names.length > 0) {
+        tagsHtml += '<span class="detail-tag tag-glaze">Glaze: ' + item.glaze_names.join(", ") + '</span>';
+      } else {
+        tagsHtml += '<span class="detail-tag tag-note">Original (Tanpa Glaze)</span>';
       }
-      if (item.topping_names.length > 0) {
-        metaParts.push("Topping: " + item.topping_names.join(", "));
+
+      if (item.topping_names && item.topping_names.length > 0) {
+        tagsHtml += '<span class="detail-tag tag-topping">Topping: ' + item.topping_names.join(", ") + '</span>';
       }
+
       if (item.note) {
-        metaParts.push("Catatan: " + item.note);
+        tagsHtml += '<span class="detail-tag tag-note">Catatan: ' + item.note + '</span>';
       }
 
       row.innerHTML =
-        '<div style="flex: 1; padding-right: 8px;">' +
-          '<strong>' + item.product_name + ' (' + item.size_name + ')</strong> x ' + item.qty +
-          '<div class="cart-item-meta">' + metaParts.join(" | ") + '</div>' +
-          '<div style="font-weight: 800; margin-top: 4px; color: var(--color-primary);">' + formatRupiah(itemSubtotal) + '</div>' +
+        '<div style="flex: 1; padding-right: 12px;">' +
+          '<div style="font-size: 15px; font-weight: 700; color: var(--color-ink);">' +
+            item.product_name + ' (' + item.size_name + ') <span style="color: var(--color-ink-muted);">x ' + item.qty + '</span>' +
+          '</div>' +
+          '<div class="cart-item-tags">' + tagsHtml + '</div>' +
+          '<div style="font-weight: 800; margin-top: 6px; color: var(--color-primary); font-size: 15px;">' + formatRupiah(itemSubtotal) + '</div>' +
         '</div>' +
         '<div>' +
           '<button type="button" class="cart-item-remove" data-index="' + index + '">Hapus</button>' +
@@ -481,16 +639,28 @@
     elCartBar.classList.add("bump");
   }
 
-  // Toggle Ambil Sendiri
-  elPickupCheckbox.addEventListener("change", function () {
-    if (elPickupCheckbox.checked) {
+  // Sinkronisasi status Ambil Sendiri (Kondisional Alamat)
+  function updatePickupState() {
+    const isPickup = elPickupCheckbox.checked;
+    const card = elPickupCheckbox.closest(".pickup-toggle-card");
+    if (card) {
+      if (isPickup) {
+        card.classList.add("checked");
+      } else {
+        card.classList.remove("checked");
+      }
+    }
+    if (isPickup) {
       elAddressGroup.style.display = "none";
       elAddressInput.required = false;
+      elAddressInput.value = "";
     } else {
       elAddressGroup.style.display = "block";
       elAddressInput.required = true;
     }
-  });
+  }
+
+  elPickupCheckbox.addEventListener("change", updatePickupState);
 
   // Submit Formulir Pesanan
   elOrderForm.addEventListener("submit", async function (e) {
@@ -597,66 +767,78 @@
     elCartBar.style.display = "none";
 
     let totalRupiah = 0;
-    let itemsHtml = "";
+    let itemsCardsHtml = "";
     let waItemsText = [];
 
     orderData.items.forEach(function (item, idx) {
       const sub = item.unit_price_preview * item.qty;
       totalRupiah += sub;
 
-      let detailParts = [];
-      if (item.glaze_names.length > 0) detailParts.push("Glaze: " + item.glaze_names.join(", "));
-      if (item.topping_names.length > 0) detailParts.push("Topping: " + item.topping_names.join(", "));
-      if (item.note) detailParts.push("Catatan: " + item.note);
+      let tagsHtml = "";
+      let detailDescParts = [];
 
-      itemsHtml +=
-        '<tr>' +
-          '<td>' + (idx + 1) + '. ' + item.product_name + ' (' + item.size_name + ') x' + item.qty +
-          (detailParts.length > 0 ? '<div style="font-size: 11px; color: var(--color-text-muted);">' + detailParts.join(" | ") + '</div>' : '') +
-          '</td>' +
-          '<td>' + formatRupiah(sub) + '</td>' +
-        '</tr>';
+      if (item.glaze_names && item.glaze_names.length > 0) {
+        tagsHtml += '<span class="detail-tag tag-glaze">Glaze: ' + item.glaze_names.join(", ") + '</span>';
+        detailDescParts.push("Glaze: " + item.glaze_names.join(", "));
+      } else {
+        tagsHtml += '<span class="detail-tag tag-note">Original (Tanpa Glaze)</span>';
+        detailDescParts.push("Tanpa Glaze");
+      }
+
+      if (item.topping_names && item.topping_names.length > 0) {
+        tagsHtml += '<span class="detail-tag tag-topping">Topping: ' + item.topping_names.join(", ") + '</span>';
+        detailDescParts.push("Topping: " + item.topping_names.join(", "));
+      }
+
+      if (item.note) {
+        tagsHtml += '<span class="detail-tag tag-note">Catatan: ' + item.note + '</span>';
+        detailDescParts.push("Catatan: " + item.note);
+      }
+
+      itemsCardsHtml +=
+        '<div class="summary-item-card">' +
+          '<div class="summary-item-header">' +
+            '<span class="summary-item-title">' + (idx + 1) + '. ' + item.product_name + ' (' + item.size_name + ') x' + item.qty + '</span>' +
+            '<span class="summary-item-price">' + formatRupiah(sub) + '</span>' +
+          '</div>' +
+          '<div class="summary-tag-wrap">' + tagsHtml + '</div>' +
+        '</div>';
 
       let waItemLine = (idx + 1) + ". " + item.product_name + " (" + item.size_name + ") x" + item.qty;
-      if (detailParts.length > 0) {
-        waItemLine += " [" + detailParts.join(", ") + "]";
+      if (detailDescParts.length > 0) {
+        waItemLine += "\n   * " + detailDescParts.join("\n   * ");
       }
       waItemsText.push(waItemLine);
     });
 
-    const paymentText = orderData.buyer.payment === "qris" ? "QRIS" : "Cash (Tunai)";
-    const deliveryText = orderData.buyer.pickup ? "Ambil Sendiri" : orderData.buyer.address;
+    const paymentText = orderData.buyer.payment === "qris" ? "QRIS (Transfer / E-Wallet)" : "Cash (Tunai Saat Serah Terima)";
+    const deliveryText = orderData.buyer.pickup ? "Ambil Sendiri di Lokasi Penjual" : orderData.buyer.address;
 
     elSummaryContent.innerHTML =
-      '<div style="margin-bottom: 12px; font-size: 13px;">' +
-        '<div><strong>Nama:</strong> ' + orderData.buyer.name + '</div>' +
+      '<div class="summary-buyer-info">' +
+        '<div><strong>Nama Pemesan:</strong> ' + orderData.buyer.name + '</div>' +
         '<div><strong>WhatsApp:</strong> ' + orderData.buyer.wa + '</div>' +
         '<div><strong>Pengantaran:</strong> ' + deliveryText + '</div>' +
         '<div><strong>Metode Bayar:</strong> ' + paymentText + '</div>' +
-        (orderData.buyer.note ? '<div><strong>Catatan:</strong> ' + orderData.buyer.note + '</div>' : '') +
+        (orderData.buyer.note ? '<div><strong>Catatan Pesanan:</strong> ' + orderData.buyer.note + '</div>' : '') +
       '</div>' +
-      '<table class="summary-table">' +
-        '<tbody>' + itemsHtml + '</tbody>' +
-        '<tfoot>' +
-          '<tr style="border-top: 2px solid var(--color-border); font-size: 15px;">' +
-            '<td style="padding-top: 10px;"><strong>Total Tagihan</strong></td>' +
-            '<td style="padding-top: 10px; color: var(--color-primary);"><strong>' + formatRupiah(totalRupiah) + '</strong></td>' +
-          '</tr>' +
-        '</tfoot>' +
-      '</table>';
+      '<div class="summary-items-list">' +
+        itemsCardsHtml +
+      '</div>' +
+      '<div class="summary-total-bar">' +
+        '<span class="summary-total-title">Total Tagihan</span>' +
+        '<span class="summary-total-amount">' + formatRupiah(totalRupiah) + '</span>' +
+      '</div>';
 
-    // Susun pesan WhatsApp sesuai spesifikasi bagian 4:
-    // https://wa.me/62895629244156 dengan pesan:
-    // nama pemesan, daftar pesanan, total, metode bayar.
-    // Untuk QRIS, pesan meminta pembeli mengirim bukti TF.
+    // Susun pesan WhatsApp
     let waMessage =
       "Halo SakuSales, saya mau konfirmasi pesanan PO:\n\n" +
       "Nama: " + orderData.buyer.name + "\n" +
       "WhatsApp: " + orderData.buyer.wa + "\n" +
-      "Pengantaran: " + (orderData.buyer.pickup ? "Ambil Sendiri" : orderData.buyer.address) + "\n\n" +
+      "Pengantaran: " + (orderData.buyer.pickup ? "Ambil Sendiri di Lokasi Penjual" : orderData.buyer.address) + "\n\n" +
       "Daftar Pesanan:\n" + waItemsText.join("\n") + "\n\n" +
       "Total: " + formatRupiah(totalRupiah) + "\n" +
-      "Metode Bayar: " + paymentText + "\n";
+      "Metode Bayar: " + (orderData.buyer.payment === "qris" ? "QRIS" : "Cash (Tunai)") + "\n";
 
     if (orderData.buyer.note) {
       waMessage += "Catatan: " + orderData.buyer.note + "\n";
